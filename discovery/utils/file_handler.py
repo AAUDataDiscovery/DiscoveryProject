@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class FileHandler:
     def __init__(self):
-        self.supported_extensions = {m.split('_')[-1]: getattr(self, m) for m in dir(self)}
+        self.supported_extensions = {m.split('_')[-1]: getattr(self, m) for m in dir(self) if m.startswith('_handle')}
         self.loaded_files = {}
 
     def scan_filesystem(self, file_path):
@@ -21,7 +21,7 @@ class FileHandler:
         """
         for root, dirs, files in os.walk(file_path):
             for filename in files:
-                if any([file_path.endswith(extension) for extension in self.supported_extensions]):
+                if any([filename.endswith(extension) for extension in self.supported_extensions]):
                     self.load_file(os.path.join(root, filename))
 
     def load_file(self, file_path):
@@ -31,17 +31,21 @@ class FileHandler:
         extension = file_path.split('.')[-1] if '.' in file_path else 'txt'
         # file doesn't exist
         if not os.path.exists(file_path):
-            raise FileNotFoundError
+            raise FileNotFoundError(file_path)
 
         # file doesn't have a supported extension
         if extension not in self.supported_extensions:
-            raise UnsupportedFileExtension
+            raise UnsupportedFileExtension(file_path)
 
         # Nothing in place to prevent reloading files for now
         handler = self.supported_extensions[extension]
-        logging.debug(f"Loading file {file_path} using \"{handler.__name__}\" handler")
+        logger.debug(f"Loading file {file_path} using \"{handler.__name__}\" handler")
         self.loaded_files[file_path] = handler(file_path)
 
     @staticmethod
     def _handle_csv(file_path):
         return pandas.read_csv(file_path)
+
+    @staticmethod
+    def _handle_json(file_path):
+        return pandas.read_json(file_path)

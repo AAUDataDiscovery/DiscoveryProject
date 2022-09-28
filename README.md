@@ -2,4 +2,9 @@
 
 # Data Discovery
 
+## Installation
+- Clone the repository
+- Install PDM
+- Run pdm install
+
 ## Usage
