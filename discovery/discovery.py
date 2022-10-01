@@ -6,6 +6,7 @@ import yaml
 import logging.config
 
 from utils.decorators.type_enforcer import type_enforcer
+from utils.dataframe_matcher import DataFrameMatcher
 
 # set up local logging before importing local libs
 with open('logging_conf.yaml', 'r') as f:
@@ -43,3 +44,8 @@ if __name__ == "__main__":
         raise "You forgot to create a mock filesystem!"
 
     discovery_instance.add_files("../test/mock_filesystem")
+
+    dataframe_matcher = DataFrameMatcher(
+        discovery_instance.file_handler.loaded_files['../test/mock_filesystem\\weather_us.csv'],
+        discovery_instance.file_handler.loaded_files['../test/mock_filesystem\\weather_europe.csv'])
+    dataframe_matcher.match_dataframes()
