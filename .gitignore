@@ -128,4 +128,7 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-.idea/
+# Custom ignore
+test/mock_filesystem
+.idea
+.pdm.toml
