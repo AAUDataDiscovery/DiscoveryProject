@@ -82,6 +82,7 @@ class Visualizer:
         self.root.recursively_add_subgraphs()
         self.root.graph.view(filename)
 
+    # TODO: find a more generic approach
     def _generate_table(self, filename: str, col_strings: str):
         return f'''<
             <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
