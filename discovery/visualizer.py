@@ -1,70 +1,92 @@
+from typing import Optional
+
 import graphviz
 
 from discovery.utils.metadata import Metadata
-import pandas.api.types as ptypes
 
 
-class DirectoryGraph:
+class SubGraphNode:
     children: []
-    full_path: str
+    fs_full_path: str
     graph: graphviz.Digraph
 
-    def __init__(self, full_path):
+    def __init__(self, fs_full_path, graph: Optional[graphviz.Graph] = None):
         self.children = []
-        self.full_path = full_path
+        self.fs_full_path = fs_full_path
+        self._set_graph(graph)
 
-    def set_graph(self, graph: graphviz.Graph):
-        self.graph = graph
+    def _set_graph(self, graph: Optional[graphviz.Graph]):
+        if graph is None:
+            self.graph = self._generate_graph()
+        else:
+            self.graph = graph
+
+    def _generate_graph(self):
+        subgraph = graphviz.Graph(name="cluster_" + self.fs_full_path)
+        subgraph.attr(label=self.fs_full_path)
+        subgraph.attr(color='grey')
+        return subgraph
 
     def get_parent_path(self):
-        return self.full_path.rsplit('/',1)[0]
+        split = self.fs_full_path.rsplit('/', 1)
+        if 1 < len(split):
+            return split[0]
+        return ""
 
     def recursively_add_subgraphs(self):
         for child in self.children:
             child.recursively_add_subgraphs()
             self.graph.subgraph(child.graph)
         return
+
+
 class Visualizer:
-    root_graph: DirectoryGraph
-    working_directory: DirectoryGraph
-    visited_directories: [DirectoryGraph]
+    engine: str
 
-    def __init__(self, start_path):
-        self.visited_directories = []
+    root: SubGraphNode
+    working_node: SubGraphNode
+    visited_nodes: [SubGraphNode]
 
-        self.root_graph = DirectoryGraph(start_path)
+    def __init__(self, engine="fdp"):
+        self.engine = engine
+        self.visited_nodes = []
+        self.root = SubGraphNode("", self._generate_start_graph())
+        self.working_node = self.root
+        self.visited_nodes.append(self.working_node)
 
+    def _generate_start_graph(self):
         start_graph = graphviz.Graph(name="cluster_root", comment='File Visualization',
-                                                   node_attr={'shape': 'plaintext'})
-        start_graph.attr(label=start_path)
-        start_graph.engine = "fdp"
-        self.root_graph.set_graph(start_graph)
-        self.working_directory = self.root_graph
-        self.visited_directories.append(self.working_directory)
+                                     node_attr={'shape': 'plaintext'})
+        start_graph.attr(label="")
+        start_graph.engine = self.engine
+        return start_graph
 
-    def draw_metadata(self, metadata: Metadata):
-        cols = self.draw_columns(metadata.dataframe)
-        filled_table = self.generate_base_table_structure().format(metadata.filepath, cols)
-        self.working_directory.graph.node(metadata.filepath, filled_table)
+    def _draw_metadata(self, metadata: Metadata):
+        cols = self._draw_columns(metadata)
+        filled_table = self._generate_table(metadata.filepath, cols)
+        self.working_node.graph.node(metadata.filepath, filled_table)
 
-    def draw_columns(self, dataframe):
+    def _draw_columns(self, metadatum):
         col_row: str = ''
-        for column in dataframe.columns:
-            col_row += "<TR><TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD></TR>"\
-                .format(column, dataframe[column].dtype,
-                        (dataframe[column].mean() if ptypes.is_numeric_dtype(dataframe[column]) else "NA"),
-                        dataframe[column].min(), dataframe[column].max())
+        for column in metadatum.columns:
+            col_row += "<TR><TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD></TR>" \
+                .format(column.name, column.col_type,
+                        (column.mean if column.mean is not None else "NA"),
+                        column.min, column.max)
         return col_row
 
-    def draw(self, filename: str):
-        self.root_graph.recursively_add_subgraphs()
-        self.root_graph.graph.view(filename)
+    def draw(self, metadata: [Metadata], filename: str):
+        for datum in metadata:
+            self.working_node = self._determine_working_node(datum.filepath)
+            self._draw_metadata(datum)
+        self.root.recursively_add_subgraphs()
+        self.root.graph.view(filename)
 
-    def generate_base_table_structure(self):
-        return '''<
+    def _generate_table(self, filename: str, col_strings: str):
+        return f'''<
             <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
               <TR>
-                <TD COLSPAN="2" BGCOLOR="darkgrey">{}</TD>
+                <TD COLSPAN="2" BGCOLOR="darkgrey">{filename}</TD>
               </TR>
               <TR>
                 <TD BGCOLOR="lightgray">Name</TD>
@@ -74,27 +96,32 @@ class Visualizer:
                 <TD BGCOLOR="lightgray">Highest</TD>
 
               </TR>
-              {}
+              {col_strings}
             </TABLE>>'''
 
-    def change_working_graph(self, full_path):
-        already_visited = next( iter([x for x in self.visited_directories if x.full_path == full_path]), None)
+    def _determine_working_node(self, full_path):
+        # directory already registered as a node
+        already_visited = next(iter([x for x in self.visited_nodes if x.fs_full_path == full_path]), None)
         if already_visited is not None:
-            self.working_directory = already_visited
-            return
+            return already_visited
 
-        new_graph = DirectoryGraph(full_path)
-        visited_parent = next( iter([x for x in self.visited_directories
-                               if x.full_path == new_graph.get_parent_path()]),
-                              None)
-        if (visited_parent is not None):
-            subgraph = graphviz.Graph(name="cluster_"+full_path)
-            subgraph.attr(label=full_path)
-            subgraph.attr(color='grey')
-            visited_parent.children.append(new_graph)
-            new_graph.set_graph(subgraph)
-            self.visited_directories.append(new_graph)
-            self.working_directory = new_graph
-            return
-        raise Exception("Dangling path")
+        new_node = SubGraphNode(full_path)
 
+        # ensure that the tree has all ancenstors, even if no files were registered previously
+        child = new_node
+        while True:
+            visited_parent = self._get_visited_parent(child)
+            if visited_parent is None:
+                new_parent = SubGraphNode(child.get_parent_path())
+                new_parent.children.append(child)
+
+                # setup next loop
+                child = new_parent
+            else:
+                visited_parent.children.append(child)
+                break
+        return new_node
+
+    def _get_visited_parent(self, node: SubGraphNode):
+        return next(iter([x for x in self.visited_nodes
+                          if x.fs_full_path == node.get_parent_path()]), None)
