@@ -7,11 +7,13 @@ import logging.config
 from pandas.api.types import is_numeric_dtype
 
 # set up local logging before importing local libs
-with open('logging_conf.yaml', 'r') as f:
-    config = yaml.safe_load(f.read())
-    logging.config.dictConfig(config)
+# TODO: do this a better way
+if __name__ == "__main__":
+    with open('logging_conf.yaml', 'r') as f:
+        config = yaml.safe_load(f.read())
+        logging.config.dictConfig(config)
 
-logger = logging.getLogger(__name__)
+    logger = logging.getLogger(__name__)
 
 from utils.decorators.type_enforcer import type_enforcer
 from utils.file_handler import FileHandler
@@ -50,6 +52,9 @@ class Discovery:
 
             file_metadata.append(Metadata(path, col_meta))
         self.file_metadata = file_metadata
+
+    def get_loaded_files(self):
+        return self.file_handler.loaded_files
 
     @type_enforcer
     def add_files(self, path: str, reconstruct=False):
