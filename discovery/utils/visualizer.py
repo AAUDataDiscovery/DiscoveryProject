@@ -2,7 +2,7 @@ from typing import Optional
 
 import graphviz
 
-from discovery.utils.metadata import Metadata
+from utils.metadata import Metadata
 
 
 class SubGraphNode:
