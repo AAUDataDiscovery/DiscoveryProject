@@ -84,7 +84,15 @@ if __name__ == "__main__":
     discovery_instance.reconstruct_metadata()
     discovery_instance.create_visual("test_visual")
 
+    from test.datagen import FakeDataGen
+
+    fake_data = FakeDataGen()
+    fake_files = fake_data.build_df_to_file(1000, "matcher_test", index_type="categoric", continuous_data=5,
+                                            file_spread=2)
+    discovery_instance.add_file(fake_files[0])
+    discovery_instance.add_file(fake_files[1])
+
     dataframe_matcher = DataFrameMatcher(
-        discovery_instance.file_handler.loaded_files['../test/mock_filesystem\\weather_us.csv'],
-        discovery_instance.file_handler.loaded_files['../test/mock_filesystem\\weather_europe.csv'])
+        discovery_instance.file_handler.loaded_files[fake_files[0]],
+        discovery_instance.file_handler.loaded_files[fake_files[1]])
     dataframe_matcher.match_dataframes()
