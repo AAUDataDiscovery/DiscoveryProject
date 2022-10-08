@@ -134,3 +134,4 @@ test/mock_filesystem
 .pdm.toml
 .pylintrc
 bma_test_program.py
+/test/output/

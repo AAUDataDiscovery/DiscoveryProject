@@ -82,7 +82,7 @@ if __name__ == "__main__":
 
     discovery_instance.add_files("../test/mock_filesystem")
     discovery_instance.reconstruct_metadata()
-    discovery_instance.create_visual("test_visual")
+    # discovery_instance.create_visual("test_visual")
 
     from test.datagen import FakeDataGen
 
@@ -95,4 +95,5 @@ if __name__ == "__main__":
     dataframe_matcher = DataFrameMatcher(
         discovery_instance.file_handler.loaded_files[fake_files[0]],
         discovery_instance.file_handler.loaded_files[fake_files[1]])
-    dataframe_matcher.match_dataframes()
+    # dataframe_matcher.match_dataframes()
+    dataframe_matcher.match_column_names()
