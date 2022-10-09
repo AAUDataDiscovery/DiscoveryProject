@@ -2,12 +2,34 @@
 Reads a given file path into a dataframe
 """
 import os
+from typing import Optional
+
 import pandas
 import logging
 
 from utils.custom_exceptions import UnsupportedFileExtension, FileNotFoundError
+from utils.metadata_enums import FileExtension, FileSizeUnit
+from pandas.util import hash_pandas_object
 
 logger = logging.getLogger(__name__)
+
+
+class FileDescriptor:
+    dataframe: Optional[pandas.DataFrame]
+    path: str
+    extension: FileExtension
+    size: (int, FileSizeUnit)
+    hash: int
+    def __init__(self, file_hash: int, extension: FileExtension,
+                 path: str, size: (int, FileSizeUnit), dataframe: Optional[pandas.DataFrame] = None):
+        self.dataframe = dataframe
+        self.hash = file_hash
+        self.extension = extension
+        self.path = path
+        self.size = size
+
+    def set_dataframe(self, dataframe: pandas.DataFrame):
+        self.dataframe = dataframe
 
 
 class FileHandler:
@@ -44,8 +66,20 @@ class FileHandler:
 
     @staticmethod
     def _handle_csv(file_path):
-        return pandas.read_csv(file_path)
+        dataframe = pandas.read_csv(file_path)
+        return FileHandler.construct_file_descriptor(file_path, FileExtension.CSV, dataframe)
 
     @staticmethod
     def _handle_json(file_path):
         return pandas.read_json(file_path)
+        return FileHandler.construct_file_descriptor(file_path, FileExtension.JSON, dataframe)
+
+    @staticmethod
+    def construct_file_descriptor(file_path: str, extension: FileExtension, dataframe: pandas.DataFrame):
+        size = os.stat(file_path).st_size
+        file_hash = FileHandler.get_dataframe_hash(dataframe)
+        return FileDescriptor(file_hash, extension, file_path, (size, FileSizeUnit.BYTE), dataframe)
+
+    @staticmethod
+    def get_dataframe_hash(dataframe: pandas.DataFrame):
+        return hash_pandas_object(dataframe).sum()

@@ -41,18 +41,38 @@ class Discovery:
         Builds metadata based on the currently loaded files
         """
         file_metadata = []
-        for path, dataframe in self.file_handler.loaded_files.items():
-            col_meta = []
-            for col_name in dataframe.columns:
-                average, col_min, col_max = None, None, None
-                if is_numeric_dtype(dataframe[col_name]):
-                    average = dataframe[col_name].mean()
-                    col_min = dataframe[col_name].min()
-                    col_max = dataframe[col_name].max()
-                col_meta.append(ColMetadata(col_name, dataframe[col_name].dtype, average, col_min, col_max))
-
-            file_metadata.append(Metadata(path, col_meta))
+        for path, file_descriptor in self.file_handler.loaded_files.items():
+            metadatum = self.construct_metadatum(file_descriptor)
+            file_metadata.append(metadatum)
         self.file_metadata = file_metadata
+
+    def construct_metadatum(self, file_descriptor):
+        metadatum = Metadata(file_descriptor.path, file_descriptor.extension, file_descriptor.size, file_descriptor.hash)
+        col_meta = []
+        dataframe = file_descriptor.dataframe
+        for col_name in dataframe.columns:
+            column_data = self.construct_column(dataframe[col_name])
+            col_meta.append(column_data)
+        metadatum.set_columns(col_meta)
+        return metadatum
+
+    def construct_column(self, column):
+        data_type = self.get_column_type(column)
+        average, col_min, col_max = self.get_col_statistical_values(column)
+        return ColMetadata(column.name, data_type, average, col_min, col_max)
+
+    def get_col_statistical_values(self, column):
+        average, col_min, col_max = None, None, None
+
+        col_min = column.min()
+        col_max = column.max()
+
+        if is_numeric_dtype(column):
+            average = column.mean()
+        return average, col_min, col_max
+
+    def get_column_type(self, column):
+        return column.dtype
 
     def get_loaded_files(self):
         return self.file_handler.loaded_files
