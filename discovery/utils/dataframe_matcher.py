@@ -8,6 +8,8 @@ from difflib import SequenceMatcher
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from Levenshtein import ratio
+from nltk.corpus import wordnet
+from itertools import product
 
 logger = logging.getLogger(__name__)
 
@@ -86,25 +88,42 @@ class DataFrameMatcher:
 
     @staticmethod
     def match_column_names():
+        """
+        Calculates similarities between all pairs of column names in a list
+        :return:
+        """
+
         headers = ['']
         lcs_cells = [names]
         levenshtein_cells = [names]
+        wordnet_cells = [names]
 
         for i in range(0, len(names)):
             headers.append(names[i])
             lcs_column = []
             levenshtein_column = []
+            wordnet_column = []
 
             top_3_lcs = [('', 0), ('', 0), ('', 0)]
             top_3_levenshtein = [('', 0), ('', 0), ('', 0)]
+            top_3_wordnet = [('', 0), ('', 0), ('', 0)]
 
             for j in range(0, len(names)):
                 first = names[i]
                 second = names[j]
+
                 lcs_ratio = SequenceMatcher(None, first, second).ratio() * 100
                 levenshtein_ratio = ratio(first, second) * 100
+
+                synset_first = wordnet.synsets(first)
+                synset_second = wordnet.synsets(second)
+                wordnet_ratio = 0
+                if len(synset_first) > 0 and len(synset_second) > 0:
+                    wordnet_ratio = max(wordnet.wup_similarity(s1, s2) for s1, s2 in product(synset_first, synset_second)) * 100
+
                 lcs_column.append(f"{round(lcs_ratio, 2)}%")
                 levenshtein_column.append(f"{round(levenshtein_ratio, 2)}%")
+                wordnet_column.append(f"{round(wordnet_ratio, 2)}")
 
                 if i != j:
                     if lcs_ratio > top_3_lcs[0][1]:
@@ -121,25 +140,38 @@ class DataFrameMatcher:
                     elif levenshtein_ratio > top_3_levenshtein[2][1]:
                         top_3_levenshtein[2] = second, round(levenshtein_ratio, 2)
 
+                    if wordnet_ratio > top_3_wordnet[0][1]:
+                        top_3_wordnet[0] = second, round(wordnet_ratio, 2)
+                    elif wordnet_ratio > top_3_wordnet[1][1]:
+                        top_3_wordnet[1] = second, round(wordnet_ratio, 2)
+                    elif wordnet_ratio > top_3_wordnet[2][1]:
+                        top_3_wordnet[2] = second, round(wordnet_ratio, 2)
+
             print(f"{names[i]}:")
             print(
                 f"\t{top_3_lcs[0][0]} {top_3_lcs[0][1]}%, {top_3_lcs[1][0]} {top_3_lcs[1][1]}%, {top_3_lcs[2][0]} {top_3_lcs[2][1]}% [lcs]")
             print(
                 f"\t{top_3_levenshtein[0][0]} {top_3_levenshtein[0][1]}%, {top_3_levenshtein[1][0]} {top_3_levenshtein[1][1]}%, {top_3_levenshtein[2][0]} {top_3_levenshtein[2][1]}% [levenshtein]")
+            print(
+                f"\t{top_3_wordnet[0][0]} {top_3_wordnet[0][1]}%, {top_3_wordnet[1][0]} {top_3_wordnet[1][1]}%, {top_3_wordnet[2][0]} {top_3_wordnet[2][1]}% [wordnet]")
             print()
 
             lcs_cells.append(lcs_column)
             levenshtein_cells.append(levenshtein_column)
+            wordnet_cells.append(wordnet_column)
 
         fig = make_subplots(
-            rows=2, cols=1,
+            rows=3, cols=1,
             shared_xaxes=True,
             vertical_spacing=0.03,
             specs=[[{"type": "table"}],
+                   [{"type": "table"}],
                    [{"type": "table"}]]
         )
         fig.add_trace(go.Table(header=dict(values=headers),
                                cells=dict(values=lcs_cells)), row=1, col=1)
         fig.add_trace(go.Table(header=dict(values=headers),
                                cells=dict(values=levenshtein_cells)), row=2, col=1)
+        fig.add_trace(go.Table(header=dict(values=headers),
+                               cells=dict(values=wordnet_cells)), row=3, col=1)
         # fig.show()
