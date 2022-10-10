@@ -62,12 +62,23 @@ class Visualizer:
 
     def draw(self, metadata: [Metadata], filename: str):
         self.draw_metadata(metadata)
+        #self.draw_relationships(metadata)
         self._finalize_result_graph(filename)
 
     def draw_metadata(self, metadata):
         for datum in metadata:
             self.working_node = self._determine_working_node(datum.filepath)
             self._draw_metadatum(datum)
+
+    # Don't use it, not implemented properly
+    def draw_relationships(self, metadata):
+        for metadatum in metadata:
+            for column in metadatum.columns:
+                for relationship in column.relationships:
+                    self.root.graph.edge(f"{metadatum.hash}:{column.name}",
+                                         f"{relationship.target_file_hash}:{relationship.target_column_name}",
+                                         str(relationship.certainty)
+                                         )
 
     def _finalize_result_graph(self, output_filename):
         self.root.recursively_append_subgraphs()
@@ -76,13 +87,13 @@ class Visualizer:
     def _draw_metadatum(self, metadatum: Metadata):
         columns = self._draw_table_columns(metadatum)
         filled_table = self._draw_filled_metadatum_table(metadatum.filepath, columns)
-        self.working_node.graph.node(metadatum.filepath, filled_table)
+        self.working_node.graph.node(str(metadatum.hash), filled_table)
 
     # TODO: make it more generic
     def _draw_table_columns(self, metadatum):
         col_rows: str = ""
         for column in metadatum.columns:
-            col_rows += "<TR><TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD></TR>" \
+            col_rows += '<TR><TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD></TR>' \
                 .format(column.name, column.col_type,
                         (column.mean if column.mean is not None else "NA"),
                         column.min, column.max)

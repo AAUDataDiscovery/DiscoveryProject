@@ -15,7 +15,7 @@ class DataFrameMatcher:
         self.reference_df = reference_df
         self.subject_df = subject_df
 
-    def match_dataframes(self):
+    def match_dataframes(self, yield_min_percentage=70):
         """
         Displays the columns of the subject DF with their possible matches in the reference DF
         :return:
@@ -38,6 +38,8 @@ class DataFrameMatcher:
 
             for item in similarities:
                 print(f"\t{item['column']} {item['percentage']}%")
+                if yield_min_percentage <= item['percentage']:
+                    yield item['column'], column, item['percentage'] #reference_col_name, subject_col_name, certainty
 
     def _match_columns(self, reference_column_name, subject_column_name):
         """
@@ -57,12 +59,15 @@ class DataFrameMatcher:
         percentages.append(name_similarity)
 
         # Check if the 2 columns have the same data type
-        data_type_similarity = 100 if self.reference_df.dtypes[reference_column_name] == self.subject_df[subject_column_name] else 0
+        data_type_similarity = 100 if self.reference_df.dtypes[reference_column_name] == self.subject_df[
+            subject_column_name] else 0
         percentages.append(data_type_similarity)
 
         # Calculate a similarity percentage with set operations (intersection vs union) for (possible) categorical data
-        if not pandas.api.types.is_numeric_dtype(reference_column) and not pandas.api.types.is_numeric_dtype(subject_column):
-            categorical_similarity = len(numpy.intersect1d(reference_column, subject_column)) / len(numpy.union1d(reference_column, subject_column)) * 100
+        if not pandas.api.types.is_numeric_dtype(reference_column) and not pandas.api.types.is_numeric_dtype(
+                subject_column):
+            categorical_similarity = len(numpy.intersect1d(reference_column, subject_column)) / len(
+                numpy.union1d(reference_column, subject_column)) * 100
             percentages.append(categorical_similarity)
 
         # Calculate the Pearson correlation coefficient between the 2 columns if they are both numerical

@@ -42,26 +42,47 @@ class Discovery:
         """
         file_metadata = []
         for path, file_descriptor in self.file_handler.loaded_files.items():
-            metadatum = self.construct_metadatum(file_descriptor)
+            metadatum = self._construct_metadatum(file_descriptor)
             file_metadata.append(metadatum)
         self.file_metadata = file_metadata
 
-    def construct_metadatum(self, file_descriptor):
+    def _construct_metadatum(self, file_descriptor):
         metadatum = Metadata(file_descriptor.path, file_descriptor.extension, file_descriptor.size, file_descriptor.hash)
         col_meta = []
         dataframe = file_descriptor.dataframe
+
         for col_name in dataframe.columns:
-            column_data = self.construct_column(dataframe[col_name])
+            column_data = self._construct_column(dataframe[col_name])
             col_meta.append(column_data)
         metadatum.set_columns(col_meta)
+        metadatum.set_reference_dataframe(dataframe)
         return metadatum
 
-    def construct_column(self, column):
-        data_type = self.get_column_type(column)
-        average, col_min, col_max = self.get_col_statistical_values(column)
+    def construct_relationships(self):
+        for reference_metadatum in self.file_metadata:
+            for subject_metadatum in self.file_metadata:
+                if reference_metadatum.hash == subject_metadatum.hash:
+                    continue
+                self._match_metadata(reference_metadatum, subject_metadatum)
+                print(reference_metadatum.filepath+" "+subject_metadatum.filepath)
+
+    def _match_metadata(self, reference_metadatum, subject_metadatum):
+        dataframe_matcher = DataFrameMatcher(
+            reference_metadatum.reference_dataframe,
+            subject_metadatum.reference_dataframe
+        )
+        results = dataframe_matcher.match_dataframes()
+        for reference_col_name, subject_col_name, certainty in results:
+            column = next(iter([x for x in reference_metadatum.columns if x.name == reference_col_name]), None)
+            if column is not None:
+                column.add_relationship(certainty, subject_metadatum.hash, subject_col_name)
+
+    def _construct_column(self, column):
+        data_type = self._get_column_type(column)
+        average, col_min, col_max = self._get_col_statistical_values(column)
         return ColMetadata(column.name, data_type, average, col_min, col_max)
 
-    def get_col_statistical_values(self, column):
+    def _get_col_statistical_values(self, column):
         average, col_min, col_max = None, None, None
 
         col_min = column.min()
@@ -71,7 +92,7 @@ class Discovery:
             average = column.mean()
         return average, col_min, col_max
 
-    def get_column_type(self, column):
+    def _get_column_type(self, column):
         return column.dtype
 
     def get_loaded_files(self):
@@ -102,6 +123,11 @@ if __name__ == "__main__":
 
     discovery_instance.add_files("../test/mock_filesystem")
     discovery_instance.reconstruct_metadata()
+    discovery_instance.construct_relationships()
+
+    for metadata in discovery_instance.file_metadata:
+        metadata.dump_to_xml()
+
     discovery_instance.create_visual("test_visual")
 
     from test.datagen import FakeDataGen
