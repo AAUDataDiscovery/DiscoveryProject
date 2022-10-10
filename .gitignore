@@ -132,5 +132,4 @@ dmypy.json
 test/mock_filesystem
 .idea
 .pdm.toml
-.pylintrc
 bma_test_program.py
