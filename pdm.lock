@@ -43,7 +43,7 @@ summary = "Python 2 and 3 compatibility utilities"
 
 [metadata]
 lock_version = "4.0"
-content_hash = "sha256:e56880970f96bc0f463854a5d91aeb04541da73aff6c9f0c68b03e64a8d6c838"
+content_hash = "sha256:4500c455fe3eb3ba5f1a68e199ed5e82cbda22eddf93a65610f26c1540c7b89f"
 
 [metadata.files]
 "graphviz 0.20.1" = [
