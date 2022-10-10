@@ -16,8 +16,10 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Setup PDM
-        run: python -m pip install pdm
+      - name: Setup python tools
+        run: |
+          python -m pip install pdm
+          python -m pip install flake8
       - name: Install dependencies
         run: pdm install    
       - name: Lint with flake8
