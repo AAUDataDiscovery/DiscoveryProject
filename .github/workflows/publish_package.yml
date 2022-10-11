@@ -1,0 +1,29 @@
+name: Upload Python Package to pypi
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    uses:  AAUDataDiscovery /DiscoveryProject/.github/workflows/itest_and_lint.yml@main
+
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.x'
+
+    - name: install pdm
+      run: python -m pip install pdm
+
+    - name: publish with pdm
+      run: pdm publish -u __token__ -P ${{ secrets.PYPI_API_TOKEN }}
