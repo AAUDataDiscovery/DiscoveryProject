@@ -1,6 +1,6 @@
 [project]
 name = "DataCatalogueSystem"
-version = "0.0.1"
+version = "0.0.2"
 description = "This library is used to discover and assign metadata to large unrefined data sets"
 authors = [
     {name = "MII", email = "mnel.jnr@gmail.com"},
