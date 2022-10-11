@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   test:
-    uses:  AAUDataDiscovery/DiscoveryProject/.github/workflows/itest_and_lint.yml@main
+    uses:  AAUDataDiscovery/DiscoveryProject/.github/workflows/test_and_lint.yml@main
 
   deploy:
     runs-on: ubuntu-latest
