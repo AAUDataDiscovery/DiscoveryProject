@@ -1,45 +1,52 @@
-import os
 import pandas as pd
- 
-"""
-Defines the number of the rows in the csv file
-"""
-class FileSettings(object):
-    def __init__(self, file_name, row_size=10):
-        self.file_name = file_name
-        self.row_size = row_size
+import numpy as np
+import random
 
+#path of the file 
+file_path = 'mock_filesystem/'
 
-class FileSplitter(object):
- 
-    """
-    Read the csv file and divide the data into chunks
-    """
-    def __init__(self, file_settings):
-        self.file_settings = file_settings
- 
-        self.df = pd.read_csv(self.file_settings.file_name,
-                              chunksize=self.file_settings.row_size)
- 
-    def run(self, directory="mock_filesystem"): 
-        counter = 0
-        while True:
-            try:
-                file_name = "{}_split_{}.csv".format(
-                    self.file_settings.file_name.split(".")[0], counter
-                )
-                df = next(self.df).to_csv(file_name)
-                counter = counter + 1
-            except StopIteration:
-                break
-        return True
- 
+#read the csv file from the path
+file_name = file_path + 'new_test_0.csv'
 
-def main():
-    helper =  FileSplitter(FileSettings(
-        file_name='mock_filesystem/new_test_0.csv',
-        row_size=10
-    ))
-    helper.run()
- 
-main()
+#get the number of lines from the csv file
+number_lines = sum(1 for line in (open(file_name)))
+
+#the number of rows for each splitted csv file
+rowsize = 1000
+
+counter = 0
+
+#start looping through data
+for i in range(0,number_lines,rowsize):
+
+    df = pd.read_csv(
+        file_name,
+        nrows = rowsize,
+        skiprows = i        
+    )
+
+    #reads only the continuous data
+    df_continuous=df.select_dtypes(exclude=['object'])
+
+    out_csv_continuous = file_path + 'continuous_data' + str(counter) + '.csv'
+
+    df_continuous.to_csv(out_csv_continuous,
+          index=False,
+          header=True,     
+          mode='a',
+          chunksize=rowsize
+          )
+
+    #reads only the categoric data
+    df_categoric = df.select_dtypes(include='object')
+
+    out_csv_categoric = file_path + 'categoric_data' + str(counter) + '.csv'
+    
+    counter = counter + 1
+    
+    df_categoric.to_csv(out_csv_categoric,
+          index=False,
+          header=True,     
+          mode='a',
+          chunksize=rowsize
+          )
