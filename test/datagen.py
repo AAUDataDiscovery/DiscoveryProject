@@ -89,8 +89,12 @@ class FakeDataGen:
 
 if __name__ == "__main__":
     datagen = FakeDataGen()
-    gen_rows = 10000
+    # gen_rows = 10000
+    gen_rows = 100
     start_time = time.time()
     datagen.build_df_to_file(gen_rows, path='mock_filesystem/new_test',
-                             continuous_data=10, categoric_data=10, file_spread=2)
+    #datagen.build_df_to_file(gen_rows, path='test',
+                            #  continuous_data=10, categoric_data=10, file_spread=2)
+                             continuous_data=2, categoric_data=2, file_spread=2)
+
     print(f"Completed data generation in {time.time() - start_time} seconds")
