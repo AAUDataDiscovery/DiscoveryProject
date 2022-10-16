@@ -10,6 +10,7 @@ from plotly.subplots import make_subplots
 from Levenshtein import ratio
 from nltk.corpus import wordnet
 from itertools import product
+from nltk.tokenize import word_tokenize
 
 logger = logging.getLogger(__name__)
 
@@ -110,16 +111,26 @@ class DataFrameMatcher:
 
             for j in range(0, len(names)):
                 first = names[i]
+                first_words = word_tokenize(names[i].replace('_', ' '))
                 second = names[j]
+                second_words = word_tokenize(names[j].replace('_', ' '))
 
                 lcs_ratio = SequenceMatcher(None, first, second).ratio() * 100
                 levenshtein_ratio = ratio(first, second) * 100
 
-                synset_first = wordnet.synsets(first)
-                synset_second = wordnet.synsets(second)
-                wordnet_ratio = 0
-                if len(synset_first) > 0 and len(synset_second) > 0:
-                    wordnet_ratio = max(wordnet.wup_similarity(s1, s2) for s1, s2 in product(synset_first, synset_second)) * 100
+                wordnet_ratio = 0.0
+                ratio_no = 0
+                for first_word in first_words:
+                    for second_word in second_words:
+                        synset_first = wordnet.synsets(first_word)
+                        synset_second = wordnet.synsets(second_word)
+                        wordnet_ratio = 0
+                        if len(synset_first) > 0 and len(synset_second) > 0:
+                            wordnet_ratio += max(
+                                wordnet.wup_similarity(s1, s2) for s1, s2 in product(synset_first, synset_second)) * 100
+                            ratio_no += 1
+                if ratio_no:
+                    wordnet_ratio /= ratio_no
 
                 lcs_column.append(f"{round(lcs_ratio, 2)}%")
                 levenshtein_column.append(f"{round(levenshtein_ratio, 2)}%")
