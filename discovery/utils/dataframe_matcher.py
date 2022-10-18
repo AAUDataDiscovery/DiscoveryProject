@@ -13,41 +13,37 @@ from itertools import product
 
 logger = logging.getLogger(__name__)
 
-names = ['customer_id', 'first_name', 'last_name', 'phone', 'email', 'street', 'city', 'state', 'zip_code', 'order_id',
-         'order_status', 'order_date', 'required_date', 'shipped_date', 'staff_id', 'store_id', 'category_id',
-         'category_name', 'product_name', 'brand_id', 'model_year', 'list_price', 'quantity', 'workdept',
-         'no_of_employees', 'deptname', 'mgrno', 'location', 'sex', 'birthdate', 'salary', 'bonus', 'hiredate',
-         'phone_no', 'job', 'position', 'firstname', 'lastname', 'ed_level', 'deptnumb', 'manager', 'projno', 'majproj']
-
 
 class DataFrameMatcher:
-    def __init__(self, reference_df: pandas.DataFrame, subject_df: pandas.DataFrame):
-        self.reference_df = reference_df
-        self.subject_df = subject_df
+    def __init__(self, name_matcher, data_matcher):
+        self.name_matcher = name_matcher
+        self.data_matcher = data_matcher
 
-    def match_dataframes(self):
+    def match_dataframes(self, df_a, df_b):
         """
-        Displays the columns of the subject DF with their possible matches in the reference DF
+        Returns all pairs of columns from dataframes A and B with their confidence percentages based on the column
+        names, and on the column contents.
         :return:
         """
 
         similarities = []
-        for column in self.reference_df.columns:
+        for column in df_b.columns:
             similarities.append({
                 'column': column,
                 'percentage': 0.0,
             })
 
-        for column in self.subject_df.columns:
-            print(column)
+        for column_a in df_a.columns:
+            for column_b in df_b.columns:
+                name_confidence = 0
+                data_confidence = 0
 
-            for i in range(0, len(similarities)):
-                similarities[i]['percentage'] = self._match_columns(similarities[i]['column'], column)
-
-            similarities.sort(key=lambda x: x['percentage'], reverse=True)
-
-            for item in similarities:
-                print(f"\t{item['column']} {item['percentage']}%")
+                similarities.append({
+                    'column_a': column_a,
+                    'column_b': column_b,
+                    'name_confidence': name_confidence,
+                    'data_confidence': data_confidence,
+                })
 
     def _match_columns(self, reference_column_name, subject_column_name):
         """
