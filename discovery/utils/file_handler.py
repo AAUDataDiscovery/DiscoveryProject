@@ -58,7 +58,7 @@ class FileHandler:
 
     @staticmethod
     def _handle_json(file_path):
-        return pandas.read_json(file_path)
+        dataframe = pandas.read_json(file_path)
         return FileHandler.construct_file_descriptor(file_path, FileExtension.JSON, dataframe)
 
     @staticmethod
