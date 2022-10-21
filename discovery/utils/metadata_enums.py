@@ -7,6 +7,7 @@ class FileSizeUnit(Enum):
     MEGABYTE = "megabyte"
     GIGABYTE = "gigabyte"
 
+
 class FileExtension(Enum):
     JSON = "json"
     CSV = "csv"

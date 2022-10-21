@@ -62,7 +62,7 @@ class Visualizer:
 
     def draw(self, metadata: [Metadata], filename: str):
         self._draw_metadata(metadata)
-        #self.draw_relationships(metadata)
+        # self.draw_relationships(metadata)
         self._finalize_result_graph(filename)
 
     def _draw_metadata(self, metadata):

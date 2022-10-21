@@ -1,11 +1,9 @@
 """
 Data storage in memory
 """
-from typing import Optional, Union
+from typing import Union
 from utils.metadata_enums import FileSizeUnit, FileExtension
 
-import pandas
-import json
 import numbers
 
 
@@ -60,7 +58,6 @@ class ColMetadata:
         if mean is not None:
             return float(mean)
         return None
-
 
     def _normalize_minmax_values(self, val):
         if val is not None:

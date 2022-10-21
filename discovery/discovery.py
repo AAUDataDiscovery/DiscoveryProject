@@ -37,7 +37,7 @@ class Discovery:
         Build a visual based on stored metadata
         """
 
-        #TODO: find a fancy python way to do this
+        # TODO: find a fancy python way to do this
         metadata = []
         for dataframe, metadatum in self.dataframe_file_metadata_pairs:
             metadata.append(metadatum)
