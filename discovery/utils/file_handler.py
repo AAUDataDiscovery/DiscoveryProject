@@ -2,7 +2,6 @@
 Reads a given file path into a dataframe
 """
 import os
-from typing import Optional
 
 import pandas
 import logging
@@ -14,27 +13,10 @@ from pandas.util import hash_pandas_object
 logger = logging.getLogger(__name__)
 
 
-class FileDescriptor:
-    dataframe: Optional[pandas.DataFrame]
-    path: str
-    extension: FileExtension
-    size: (int, FileSizeUnit)
-    hash: int
-    def __init__(self, file_hash: int, extension: FileExtension,
-                 path: str, size: (int, FileSizeUnit), dataframe: Optional[pandas.DataFrame] = None):
-        self.dataframe = dataframe
-        self.hash = file_hash
-        self.extension = extension
-        self.path = path
-        self.size = size
-
-    def set_dataframe(self, dataframe: pandas.DataFrame):
-        self.dataframe = dataframe
-
-
 class FileHandler:
     def __init__(self):
         self.supported_extensions = {m.split('_')[-1]: getattr(self, m) for m in dir(self) if m.startswith('_handle')}
+        self.ignored_extensions = [".metadata.json"]
         self.loaded_files = {}
 
     def scan_filesystem(self, file_path):
@@ -59,10 +41,15 @@ class FileHandler:
         if extension not in self.supported_extensions:
             raise UnsupportedFileExtension(file_path)
 
+        if self._should_file_be_ignored(file_path):
+            return
         # Nothing in place to prevent reloading files for now
         handler = self.supported_extensions[extension]
         logger.debug(f"Loading file {file_path} using \"{handler.__name__}\" handler")
         self.loaded_files[file_path] = handler(file_path)
+
+    def _should_file_be_ignored(self, path):
+        return any(path.endswith(ignored_extension) for ignored_extension in self.ignored_extensions)
 
     @staticmethod
     def _handle_csv(file_path):
@@ -78,7 +65,13 @@ class FileHandler:
     def construct_file_descriptor(file_path: str, extension: FileExtension, dataframe: pandas.DataFrame):
         size = os.stat(file_path).st_size
         file_hash = FileHandler.get_dataframe_hash(dataframe)
-        return FileDescriptor(file_hash, extension, file_path, (size, FileSizeUnit.BYTE), dataframe)
+        return {
+            "file_path": file_path,
+            "extension": extension,
+            "dataframe": dataframe,
+            "size": (size, FileSizeUnit.BYTE),
+            "file_hash": file_hash
+        }
 
     @staticmethod
     def get_dataframe_hash(dataframe: pandas.DataFrame):

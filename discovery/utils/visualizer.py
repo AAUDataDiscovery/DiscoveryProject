@@ -1,7 +1,7 @@
 from typing import Optional
 import graphviz
 
-from utils.metadata import Metadata
+from utils.metadata.metadata import Metadata
 
 
 class SubGraphNode:
@@ -61,17 +61,17 @@ class Visualizer:
         return start_graph
 
     def draw(self, metadata: [Metadata], filename: str):
-        self.draw_metadata(metadata)
+        self._draw_metadata(metadata)
         #self.draw_relationships(metadata)
         self._finalize_result_graph(filename)
 
-    def draw_metadata(self, metadata):
+    def _draw_metadata(self, metadata):
         for datum in metadata:
-            self.working_node = self._determine_working_node(datum.filepath)
+            self.working_node = self._determine_working_node(datum.file_path)
             self._draw_metadatum(datum)
 
     # Don't use it, not implemented properly
-    def draw_relationships(self, metadata):
+    def _draw_relationships(self, metadata):
         for metadatum in metadata:
             for column in metadatum.columns:
                 for relationship in column.relationships:
@@ -86,7 +86,7 @@ class Visualizer:
 
     def _draw_metadatum(self, metadatum: Metadata):
         columns = self._draw_table_columns(metadatum)
-        filled_table = self._draw_filled_metadatum_table(metadatum.filepath, columns)
+        filled_table = self._draw_filled_metadatum_table(metadatum.file_path, columns)
         self.working_node.graph.node(str(metadatum.hash), filled_table)
 
     # TODO: make it more generic
@@ -96,12 +96,12 @@ class Visualizer:
             col_rows += '<TR><TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD></TR>' \
                 .format(column.name, column.col_type,
                         (column.mean if column.mean is not None else "NA"),
-                        column.min, column.max)
+                        column.minimum, column.maximum)
         return col_rows
 
     # TODO: break down mean string generator
     def _draw_column_row(self, column):
-        return f'<TR><TD>{column.name}</TD> <TD>{column.col_type}</TD> <TD>{(column.mean if column.mean is not None else "NA")}</TD> <TD>{column.min}</TD> <TD>{column.max}</TD></TR>'
+        return f'<TR><TD>{column.name}</TD> <TD>{column.col_type}</TD> <TD>{(column.mean if column.mean is not None else "NA")}</TD> <TD>{column.minimum}</TD> <TD>{column.maximum}</TD></TR>'
 
     # TODO: find a more generic approach
     def _draw_filled_metadatum_table(self, filename: str, col_strings: str):

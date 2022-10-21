@@ -6,6 +6,9 @@ import yaml
 import logging.config
 from pandas.api.types import is_numeric_dtype
 
+from utils.metadata.metadata import Metadata, ColMetadata
+from utils.metadata.metadata_json_handler import write_metadata_to_json
+
 # set up local logging before importing local libs
 # TODO: do this a better way
 if __name__ == "__main__":
@@ -20,21 +23,25 @@ from utils.dataframe_matcher import DataFrameMatcher
 from utils.file_handler import FileHandler
 from utils.decorators.persist_execution import persistence
 from utils.visualizer import Visualizer
-from utils.metadata import Metadata, ColMetadata
 
 
 class Discovery:
     def __init__(self, discovery_config: dict):
         self.config = discovery_config
         self.file_handler = FileHandler()
-        self.file_metadata = []
+        self.dataframe_file_metadata_pairs = []
         self.visualiser = Visualizer()
 
     def create_visual(self, pathname):
         """
         Build a visual based on stored metadata
         """
-        self.visualiser.draw(self.file_metadata, pathname)
+
+        #TODO: find a fancy python way to do this
+        metadata = []
+        for dataframe, metadatum in self.dataframe_file_metadata_pairs:
+            metadata.append(metadatum)
+        self.visualiser.draw(metadata, pathname)
 
     def reconstruct_metadata(self):
         """
@@ -43,33 +50,33 @@ class Discovery:
         file_metadata = []
         for path, file_descriptor in self.file_handler.loaded_files.items():
             metadatum = self._construct_metadatum(file_descriptor)
-            file_metadata.append(metadatum)
-        self.file_metadata = file_metadata
+            file_metadata.append((file_descriptor["dataframe"], metadatum))
+        self.dataframe_file_metadata_pairs = file_metadata
 
     def _construct_metadatum(self, file_descriptor):
-        metadatum = Metadata(file_descriptor.path, file_descriptor.extension, file_descriptor.size, file_descriptor.hash)
+        metadatum = Metadata(file_descriptor["file_path"], file_descriptor["extension"],
+                             file_descriptor["size"], file_descriptor["file_hash"])
         col_meta = []
-        dataframe = file_descriptor.dataframe
+        dataframe = file_descriptor["dataframe"]
 
         for col_name in dataframe.columns:
             column_data = self._construct_column(dataframe[col_name])
             col_meta.append(column_data)
-        metadatum.set_columns(col_meta)
-        metadatum.set_reference_dataframe(dataframe)
+        metadatum.columns = col_meta
         return metadatum
 
     def construct_relationships(self):
-        for reference_metadatum in self.file_metadata:
-            for subject_metadatum in self.file_metadata:
+        for reference_dataframe, reference_metadatum in self.dataframe_file_metadata_pairs:
+            for subject_dataframe, subject_metadatum in self.dataframe_file_metadata_pairs:
                 if reference_metadatum.hash == subject_metadatum.hash:
                     continue
-                self._match_metadata(reference_metadatum, subject_metadatum)
-                print(reference_metadatum.filepath+" "+subject_metadatum.filepath)
+                self._match_metadata(reference_dataframe, reference_metadatum, subject_dataframe, subject_metadatum)
+                print(reference_metadatum.file_path+" "+subject_metadatum.file_path)
 
-    def _match_metadata(self, reference_metadatum, subject_metadatum):
+    def _match_metadata(self, reference_dataframe, reference_metadatum, subject_dataframe, subject_metadatum):
         dataframe_matcher = DataFrameMatcher(
-            reference_metadatum.reference_dataframe,
-            subject_metadatum.reference_dataframe
+            reference_dataframe,
+            subject_dataframe
         )
         results = dataframe_matcher.match_dataframes()
         for reference_col_name, subject_col_name, certainty in results:
@@ -125,8 +132,8 @@ if __name__ == "__main__":
     discovery_instance.reconstruct_metadata()
     discovery_instance.construct_relationships()
 
-    for metadata in discovery_instance.file_metadata:
-        metadata.dump_to_xml()
+    for dataframe, metadata in discovery_instance.dataframe_file_metadata_pairs:
+        write_metadata_to_json(metadata)
 
     discovery_instance.create_visual("test_visual")
 
