@@ -30,9 +30,8 @@ jobs:
       - name: Download NLTK resources
         run: |
           source ./.venv/bin/activate
-          python -m nltk.downloader wordnet
+          python -m nltk.downloader wordnet omw-1.4
           deactivate
-          sleep 30s
       - name: Test with pytest
         run: |
           pdm run -v pytest discovery
