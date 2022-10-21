@@ -4,6 +4,7 @@ from pandas.api.types import is_numeric_dtype
 from pandas.api.types import is_string_dtype
 import numbers
 
+
 def write_metadata_to_json(metadata: Metadata):
     dictionary_representation = get_metadata_dictionary_representation(metadata)
     json_string = json.dumps(dictionary_representation)
@@ -19,6 +20,35 @@ def get_metadata_dictionary_representation(metadata: Metadata):
         "columns": get_columns_dictionary_representation(metadata.columns)
     }
     return dictionary_representation
+
+
+def get_columns_dictionary_representation(columns: [ColMetadata]):
+    columns_list = []
+    for column in columns:
+        column_dict = {
+            "name": normalize_and_get_column_name(column.name),
+            "mean": normalize_and_get_column_mean(column.mean),
+            "minimum": normalize_and_get_column_min_max(column.minimum),
+            "maximum": normalize_and_get_column_min_max(column.maximum),
+            "relationships": get_relationships_dictionary_representation(column.relationships)
+        }
+        if column.columns is not None:
+            column_dict["columns"] = get_columns_dictionary_representation(column.columns)
+        columns_list.append(column_dict)
+    return columns_list
+
+
+def get_relationships_dictionary_representation(relationships: [Relationship]):
+    relationships_list = []
+    for relationship in relationships:
+        relationships_list.append(
+            {
+                "certainty": normalize_and_get_relationship_certainty(relationship.certainty),
+                "target_file_hash": normalize_and_get_hash(relationship.target_file_hash),
+                "target_column_name": normalize_and_get_column_name(relationship.target_column_name)
+            }
+        )
+    return relationships_list
 
 
 def write_json_to_file(path, json_string):
@@ -46,22 +76,6 @@ def normalize_and_get_hash(file_hash):
     return file_hash
 
 
-def get_columns_dictionary_representation(columns: [ColMetadata]):
-    columns_list = []
-    for column in columns:
-        column_dict = {
-            "name": normalize_and_get_column_name(column.name),
-            "mean": normalize_and_get_column_mean(column.mean),
-            "minimum": normalize_and_get_column_min_max(column.minimum),
-            "maximum": normalize_and_get_column_min_max(column.maximum),
-            "relationships": get_relationships_dictionary_representation(column.relationships)
-        }
-        if column.columns is not None:
-            column_dict["columns"] = get_columns_dictionary_representation(column.columns)
-        columns_list.append(column_dict)
-    return columns_list
-
-
 def normalize_and_get_column_name(name):
     return str(name)
 
@@ -82,19 +96,6 @@ def normalize_pandas_numeric_values(value):
     if is_numeric_dtype(value):
         return float(value)
     return None
-
-
-def get_relationships_dictionary_representation(relationships: [Relationship]):
-    relationships_list = []
-    for relationship in relationships:
-        relationships_list.append(
-            {
-                "certainty": normalize_and_get_relationship_certainty(relationship.certainty),
-                "target_file_hash": normalize_and_get_hash(relationship.target_file_hash),
-                "target_column_name": normalize_and_get_column_name(relationship.target_column_name)
-            }
-        )
-    return relationships_list
 
 
 def normalize_and_get_relationship_certainty(certainty):
