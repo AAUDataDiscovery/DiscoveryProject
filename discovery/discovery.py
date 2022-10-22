@@ -72,4 +72,21 @@ class Discovery:
 
 
 if __name__ == "__main__":
-    pass
+    # locally test the mock filesystem
+    launch_config = yaml.safe_load(open("launch_config.yaml"))
+    discovery_instance = Discovery(launch_config)
+
+    logger = logging.getLogger(__name__)
+
+    from utils.datagen import FakeDataGen
+
+    fake_data = FakeDataGen()
+    fake_files = fake_data.build_df_to_file(100000, path="test/output/matcher_test", index_type="counter",
+                                            continuous_data=10, file_spread=2)
+    discovery_instance.add_file(fake_files[0])
+    discovery_instance.add_file(fake_files[1])
+
+    dataframe_matcher = DataFrameMatcher(DataFrameMatcher.match_name_wordnet,
+                                         DataFrameMatcher.match_data_pearson_coefficient)
+    dataframe_matcher.match_dataframes(discovery_instance.file_handler.loaded_files[fake_files[0]],
+                                       discovery_instance.file_handler.loaded_files[fake_files[1]])

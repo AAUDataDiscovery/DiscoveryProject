@@ -25,23 +25,20 @@ class DataFrameMatcher:
         """
 
         similarities = []
-        for column in df_b.columns:
-            similarities.append({
-                'column': column,
-                'percentage': 0.0,
-            })
 
         for column_a in df_a.columns:
             for column_b in df_b.columns:
                 name_confidence = self.name_matcher(column_a, column_b)
                 data_confidence = self.data_matcher(df_a.loc[:, column_a], df_b.loc[:, column_b])
 
-                similarities.append({
+                similarity = {
                     'column_a': column_a,
                     'column_b': column_b,
                     'name_confidence': name_confidence,
                     'data_confidence': data_confidence,
-                })
+                }
+                logger.debug(similarity)
+                similarities.append(similarity)
 
         return similarities
 
