@@ -5,7 +5,7 @@ import os
 import pandas
 import logging
 
-from utils.custom_exceptions import UnsupportedFileExtension, FileNotFoundError
+from discovery.utils.custom_exceptions import UnsupportedFileExtension, FileNotFoundError
 
 logger = logging.getLogger(__name__)
 

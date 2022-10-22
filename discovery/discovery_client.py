@@ -15,15 +15,15 @@ if __name__ == "__main__":
 
     logger = logging.getLogger(__name__)
 
-from utils.decorators.type_enforcer import type_enforcer
-from utils.dataframe_matcher import DataFrameMatcher
-from utils.file_handler import FileHandler
-from utils.decorators.persist_execution import persistence
-from utils.visualizer import Visualizer
-from utils.metadata import Metadata, ColMetadata
+from discovery.utils.decorators.type_enforcer import type_enforcer
+from discovery.utils.dataframe_matcher import DataFrameMatcher
+from discovery.utils.file_handler import FileHandler
+from discovery.utils.decorators.persist_execution import persistence
+from discovery.utils.visualizer import Visualizer
+from discovery.utils.metadata import Metadata, ColMetadata
 
 
-class Discovery:
+class DiscoveryClient:
     def __init__(self, discovery_config: dict):
         self.config = discovery_config
         self.file_handler = FileHandler()
