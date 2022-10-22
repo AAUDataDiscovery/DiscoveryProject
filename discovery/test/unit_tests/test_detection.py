@@ -7,7 +7,6 @@ from _pytest.fixtures import fixture
 from discovery import Discovery
 from utils.datagen import FakeDataGen
 
-
 @fixture(scope="session")
 def mock_data_folder(tmp_path_factory):
     generate_data = FakeDataGen()
