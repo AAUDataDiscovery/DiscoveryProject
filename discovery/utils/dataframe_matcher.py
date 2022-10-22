@@ -1,25 +1,19 @@
 """
-Takes two dataframes and tries
+Takes two dataframes and tries to match them column by column
 """
-import yaml
 import pandas
 import numpy
-import logging.config
 from difflib import SequenceMatcher
 from Levenshtein import ratio
 from nltk.corpus import wordnet
 from itertools import product
 
-with open('../logging_conf.yaml', 'r') as f:
-    config = yaml.safe_load(f.read())
-    logging.config.dictConfig(config)
-logger = logging.getLogger(__name__)
-
 
 class DataFrameMatcher:
-    def __init__(self, name_matcher, data_matcher):
+    def __init__(self, name_matcher, data_matcher, logger):
         self.name_matcher = name_matcher
         self.data_matcher = data_matcher
+        self.logger = logger
 
     def match_dataframes(self, df_a: pandas.DataFrame, df_b: pandas.DataFrame):
         """
@@ -41,7 +35,7 @@ class DataFrameMatcher:
                     'name_confidence': name_confidence,
                     'data_confidence': data_confidence,
                 }
-                logger.debug(similarity)
+                self.logger.debug(similarity)
                 similarities.append(similarity)
 
         return similarities

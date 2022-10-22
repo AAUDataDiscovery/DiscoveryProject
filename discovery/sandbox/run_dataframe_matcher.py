@@ -23,6 +23,12 @@ class Runner:
 
 
 if __name__ == "__main__":
+    with open('../logging_conf.yaml', 'r') as f:
+        config = yaml.safe_load(f.read())
+        logging.config.dictConfig(config)
+
+    logger = logging.getLogger(__name__)
+
     file_handler = FileHandler()
     fake_data = FakeDataGen()
 
@@ -32,6 +38,7 @@ if __name__ == "__main__":
     file_handler.load_file(fake_files[1])
 
     dataframe_matcher = DataFrameMatcher(DataFrameMatcher.match_name_wordnet,
-                                         DataFrameMatcher.match_data_pearson_coefficient)
+                                         DataFrameMatcher.match_data_pearson_coefficient,
+                                         logger)
     dataframe_matcher.match_dataframes(file_handler.loaded_files[fake_files[0]],
                                        file_handler.loaded_files[fake_files[1]])
