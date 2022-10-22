@@ -42,30 +42,6 @@ class ColMetadata:
     def add_relationship(self, certainty, target_file_hash, target_column_name):
         self.relationships.append(Relationship(certainty, target_file_hash, target_column_name))
 
-    def normalize_for_json(self):
-        self.col_type = self._normalize_col_type(self.col_type)
-        self.mean = self._normalize_mean_value(self.mean)
-        self.minimum = self._normalize_minmax_values(self.minimum)
-        self.maximum = self._normalize_minmax_values(self.maximum)
-        if self.columns is not None:
-            for column in self.columns:
-                column.normalize_for_json()
-
-    def _normalize_col_type(self, col):
-        return str(col)
-
-    def _normalize_mean_value(self, mean):
-        if mean is not None:
-            return float(mean)
-        return None
-
-    def _normalize_minmax_values(self, val):
-        if val is not None:
-            if isinstance(val, numbers.Number):
-                return float(val)
-        return None
-
-
 class Metadata:
     def __init__(self, file_path: str, extension: FileExtension,
                  size: (int, FileSizeUnit), file_hash: int,
