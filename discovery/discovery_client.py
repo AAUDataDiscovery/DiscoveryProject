@@ -74,7 +74,7 @@ class DiscoveryClient:
 if __name__ == "__main__":
     # locally test the mock filesystem
     launch_config = yaml.safe_load(open("launch_config.yaml"))
-    discovery_instance = Discovery(launch_config)
+    discovery_instance = DiscoveryClient(launch_config)
     import os
 
     if not os.path.exists('../test/mock_filesystem'):
@@ -84,7 +84,7 @@ if __name__ == "__main__":
     discovery_instance.reconstruct_metadata()
     discovery_instance.create_visual("test_visual")
 
-    from test.datagen import FakeDataGen
+    from discovery.utils.datagen import FakeDataGen
 
     fake_data = FakeDataGen()
     fake_files = fake_data.build_df_to_file(1000, "matcher_test", index_type="categoric", continuous_data=5,
