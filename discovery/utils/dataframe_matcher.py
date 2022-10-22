@@ -1,14 +1,18 @@
 """
 Takes two dataframes and tries
 """
+import yaml
 import pandas
 import numpy
-import logging
+import logging.config
 from difflib import SequenceMatcher
 from Levenshtein import ratio
 from nltk.corpus import wordnet
 from itertools import product
 
+with open('../logging_conf.yaml', 'r') as f:
+    config = yaml.safe_load(f.read())
+    logging.config.dictConfig(config)
 logger = logging.getLogger(__name__)
 
 
