@@ -7,6 +7,7 @@ from difflib import SequenceMatcher
 from Levenshtein import ratio
 from nltk.corpus import wordnet
 from itertools import product
+from statsmodels.tsa.stattools import adfuller
 
 
 class DataFrameMatcher:
@@ -41,6 +42,16 @@ class DataFrameMatcher:
         return similarities
 
     @staticmethod
+    def is_column_stationary(series):
+        """
+        Checks if the data in a column is stationary using the Dickey-Fuller test
+        :param series:
+        :return:
+        """
+        result = adfuller(series)
+        return result[0] < result[4]['5%']
+
+    @staticmethod
     def match_data_identical_values(column_a, column_b):
         """
         Calculate a similarity percentage with set operations (intersection vs union) for (possible) categorical data
@@ -66,6 +77,10 @@ class DataFrameMatcher:
             pearson_correlation_coefficient = abs(column_a.corr(column_b)) * 100
             return pearson_correlation_coefficient
         return 0
+
+    @staticmethod
+    def match_data_trends(column_a, column_b):
+        pass
 
     @staticmethod
     def match_name_lcs(name_a, name_b):
