@@ -16,6 +16,7 @@ dependencies = [
     "nltk>=3.7",
     "plotly>=5.10.0",
     "statsmodels>=0.13.2",
+    "dtaidistance>=2.3.10",
 ]
 requires-python = ">=3.10"
 license = {text = "MIT"}

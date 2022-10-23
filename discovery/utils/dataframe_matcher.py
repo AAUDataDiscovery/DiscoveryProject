@@ -8,6 +8,7 @@ from Levenshtein import ratio
 from nltk.corpus import wordnet
 from itertools import product
 from statsmodels.tsa.stattools import adfuller
+from dtaidistance import dtw
 
 
 class DataFrameMatcher:
@@ -76,6 +77,21 @@ class DataFrameMatcher:
         if pandas.api.types.is_numeric_dtype(column_a) and pandas.api.types.is_numeric_dtype(column_b):
             pearson_correlation_coefficient = abs(column_a.corr(column_b)) * 100
             return pearson_correlation_coefficient
+        return 0
+
+    @staticmethod
+    def match_data_dynamic_time_warping(column_a, column_b):
+        """
+        Calculate the normalized distance measure between two numerical columns using Dynamic Time Warping
+        :param column_a:
+        :param column_b:
+        :return:
+        """
+
+        max_distance = len(column_a) * max(column_a)
+
+        if pandas.api.types.is_numeric_dtype(column_a) and pandas.api.types.is_numeric_dtype(column_b):
+            return (max_distance - dtw.distance(column_a, column_b)) / max_distance * 100
         return 0
 
     @staticmethod

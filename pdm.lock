@@ -20,6 +20,15 @@ requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 summary = "Cross-platform colored terminal text."
 
 [[package]]
+name = "dtaidistance"
+version = "2.3.10"
+requires_python = ">=3.5"
+summary = "Distance measures for time series (Dynamic Time Warping, fast C implementation)"
+dependencies = [
+    "numpy",
+]
+
+[[package]]
 name = "faker"
 version = "15.0.0"
 requires_python = ">=3.7"
@@ -263,7 +272,7 @@ dependencies = [
 
 [metadata]
 lock_version = "4.0"
-content_hash = "sha256:e7be5cb0fc60bccbfaa51dc9a436320f9efdb1672e3843e49e5f28c1667579ab"
+content_hash = "sha256:866a5fa08869bcc15d1e4876a7f53e08077e184bd56b2f5f110b3f429ee5d108"
 
 [metadata.files]
 "attrs 22.1.0" = [
@@ -277,6 +286,20 @@ content_hash = "sha256:e7be5cb0fc60bccbfaa51dc9a436320f9efdb1672e3843e49e5f28c16
 "colorama 0.4.5" = [
     {url = "https://files.pythonhosted.org/packages/2b/65/24d033a9325ce42ccbfa3ca2d0866c7e89cc68e5b9d92ecaba9feef631df/colorama-0.4.5.tar.gz", hash = "sha256:e6c6b4334fc50988a639d9b98aa429a0b57da6e17b9a44f0451f930b6967b7a4"},
     {url = "https://files.pythonhosted.org/packages/77/8b/7550e87b2d308a1b711725dfaddc19c695f8c5fa413c640b2be01662f4e6/colorama-0.4.5-py2.py3-none-any.whl", hash = "sha256:854bf444933e37f5824ae7bfc1e98d5bce2ebe4160d46b5edf346a89358e99da"},
+]
+"dtaidistance 2.3.10" = [
+    {url = "https://files.pythonhosted.org/packages/08/71/a2cc9942fa29fac49cd6fa839b9e0a8da7afdc1f0199dd74acea3ac5f274/dtaidistance-2.3.10-cp38-cp38-win_amd64.whl", hash = "sha256:8bf00ee46ee305db842dfdcdb3ba932f4f4a283ee3f75eaa73fe0ab29b73fdee"},
+    {url = "https://files.pythonhosted.org/packages/29/60/bb2b432f6c70035375fb1584541f104ea03f098623601d27006cee8ef7f2/dtaidistance-2.3.10-cp310-cp310-macosx_12_0_arm64.whl", hash = "sha256:3fb80a4ff415a96a927766a465db0640299a8942e1ca1586ef906cd811a419d7"},
+    {url = "https://files.pythonhosted.org/packages/33/14/7e68a31e44b832130fb0e7f233e08494035d9626cdc86d9810232ff3637c/dtaidistance-2.3.10-cp39-cp39-win_amd64.whl", hash = "sha256:f7318a482e0b6f756ded9cbce13f127d1b7104e04eb744a2aafed3c997851368"},
+    {url = "https://files.pythonhosted.org/packages/59/09/da08b320f92dbbe09aa4c215c268e6c0c12c1ebb1ead9555de529d684748/dtaidistance-2.3.10-cp310-cp310-win_amd64.whl", hash = "sha256:acc47a6fa6fabf49a1ed3265f41b00c850c8d2971a2273352a0b113fbbaf1e8d"},
+    {url = "https://files.pythonhosted.org/packages/5b/33/d3ee9c50f2ef35d77247bc216ef7900ea79cc9c0b39679fe1e2a8ef16ad1/dtaidistance-2.3.10-cp310-cp310-macosx_10_15_x86_64.whl", hash = "sha256:85c052dfd13d34c619e3682846b10f7ff247e908fad8a174424d20a362e2a164"},
+    {url = "https://files.pythonhosted.org/packages/6a/49/63b4ddfd179bdc7e9f85629a1eb1bd8477c645d7fbb38d4b95107f8aeaa6/dtaidistance-2.3.10-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7e3c21b28a71215ca4e794d37bf0535858f7a99fda712716f2dabb597849b7bf"},
+    {url = "https://files.pythonhosted.org/packages/7f/41/f1103a14b665d74add49fd0a342a1ea4bed2c7199c5b3ec5eadb42a55835/dtaidistance-2.3.10-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:addbe46dace5897fd7186a32ec850d39db2ce501e76c2b52bcf5b0d1048bfeaa"},
+    {url = "https://files.pythonhosted.org/packages/80/78/c6224c498d37f052c16997c9670c26d986c68e5d92c292a20a59df33baca/dtaidistance-2.3.10-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6205737b0e7d04a1added8ae5a95d88b5e17054a814f30c0ac17c8b917311aef"},
+    {url = "https://files.pythonhosted.org/packages/90/f1/96141eb3e2a428fa1086ca06887e1ca74b3046a05b4e4e80d2a6daa17464/dtaidistance-2.3.10-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4f1e27773d4c534160036a8a08f4009731a6c4e16a95b52403c2d67e1d288bb3"},
+    {url = "https://files.pythonhosted.org/packages/e7/18/04170840514a0d135bcff8f58198e06cf51cfe9a08c38e666e350e7f3f25/dtaidistance-2.3.10.tar.gz", hash = "sha256:0da309e34a4a8cc47ba3c84cffa072361917bb411a4b61cf7d3ffc2d457cbff2"},
+    {url = "https://files.pythonhosted.org/packages/e7/b1/6b8c3e096f93f37b688e1b64586732798ea89a391ab044fd9b7c44dabd9c/dtaidistance-2.3.10-cp38-cp38-macosx_10_15_x86_64.whl", hash = "sha256:e1f96f0f4e6e4759447aa64c509a48bb38b5189631a559144869fd0f0262a906"},
+    {url = "https://files.pythonhosted.org/packages/ef/49/341d1a7980c52dbb233f7bd8a424134e1043f11918e780dd676402e154cb/dtaidistance-2.3.10-cp39-cp39-macosx_10_15_x86_64.whl", hash = "sha256:58b8dbde8acd9b983913df1ff0caac4cd4a8d5fa9d97aa350e97186729db0c0f"},
 ]
 "faker 15.0.0" = [
     {url = "https://files.pythonhosted.org/packages/71/0b/0958bf1339211af6149fc3f194c1454666cee62db451068ddcb003fd8b73/Faker-15.0.0.tar.gz", hash = "sha256:245fc7d23470dc57164bd9a59b7b1126e16289ffcf813d88a6c8e9b8a37ea3fb"},
