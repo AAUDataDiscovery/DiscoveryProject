@@ -41,38 +41,37 @@ class FileHandler:
         if extension not in self.supported_extensions:
             raise UnsupportedFileExtension(file_path)
 
-        if self._should_file_be_ignored(file_path):
+        if self._is_file_metadata(file_path):
             return
         # Nothing in place to prevent reloading files for now
         handler = self.supported_extensions[extension]
         logger.debug(f"Loading file {file_path} using \"{handler.__name__}\" handler")
         self.loaded_files[file_path] = handler(file_path)
 
-    def _should_file_be_ignored(self, path):
+    def _is_file_metadata(self, path):
         return any(path.endswith(ignored_extension) for ignored_extension in self.ignored_extensions)
 
     @staticmethod
     def _handle_csv(file_path):
         dataframe = pandas.read_csv(file_path)
-        return FileHandler.construct_file_descriptor(file_path, FileExtension.CSV, dataframe)
+        return construct_file_descriptor(file_path, FileExtension.CSV, dataframe)
 
     @staticmethod
     def _handle_json(file_path):
         dataframe = pandas.read_json(file_path)
-        return FileHandler.construct_file_descriptor(file_path, FileExtension.JSON, dataframe)
-
-    @staticmethod
-    def construct_file_descriptor(file_path: str, extension: FileExtension, dataframe: pandas.DataFrame):
-        size = os.stat(file_path).st_size
-        file_hash = FileHandler.get_dataframe_hash(dataframe)
-        return {
-            "file_path": file_path,
-            "extension": extension,
-            "dataframe": dataframe,
-            "size": (size, FileSizeUnit.BYTE),
-            "file_hash": file_hash
-        }
+        return construct_file_descriptor(file_path, FileExtension.JSON, dataframe)
 
     @staticmethod
     def get_dataframe_hash(dataframe: pandas.DataFrame):
         return hash_pandas_object(dataframe).sum()
+
+def construct_file_descriptor(file_path: str, extension: FileExtension, dataframe: pandas.DataFrame):
+    size = os.stat(file_path).st_size
+    file_hash = FileHandler.get_dataframe_hash(dataframe)
+    return {
+        "file_path": file_path,
+        "extension": extension,
+        "dataframe": dataframe,
+        "size": (size, FileSizeUnit.BYTE),
+        "file_hash": file_hash
+    }

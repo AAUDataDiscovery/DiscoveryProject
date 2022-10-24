@@ -2,6 +2,8 @@
 Entrypoint to the discovery project
 Reads a filesystem and tries to make some analysis based off of it
 """
+import itertools
+
 import yaml
 import logging.config
 from pandas.api.types import is_numeric_dtype
@@ -66,12 +68,8 @@ class Discovery:
         return metadatum
 
     def construct_relationships(self):
-        for reference_dataframe, reference_metadatum in self.dataframe_file_metadata_pairs:
-            for subject_dataframe, subject_metadatum in self.dataframe_file_metadata_pairs:
-                if reference_metadatum.hash == subject_metadatum.hash:
-                    continue
-                self._match_metadata(reference_dataframe, reference_metadatum, subject_dataframe, subject_metadatum)
-                print(reference_metadatum.file_path+" "+subject_metadatum.file_path)
+        for pair in itertools.combinations(self.dataframe_file_metadata_pairs, 2):
+            self._match_metadata(pair[0][0], pair[0][1], pair[1][0], pair[1][1])
 
     def _match_metadata(self, reference_dataframe, reference_metadatum, subject_dataframe, subject_metadatum):
         dataframe_matcher = DataFrameMatcher(
