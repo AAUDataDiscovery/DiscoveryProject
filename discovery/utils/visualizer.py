@@ -99,10 +99,6 @@ class Visualizer:
                         column.minimum, column.maximum)
         return col_rows
 
-    # TODO: break down mean string generator
-    def _draw_column_row(self, column):
-        return f'<TR><TD>{column.name}</TD> <TD>{column.col_type}</TD> <TD>{(column.mean if column.mean is not None else "NA")}</TD> <TD>{column.minimum}</TD> <TD>{column.maximum}</TD></TR>'
-
     # TODO: find a more generic approach
     def _draw_filled_metadatum_table(self, filename: str, col_strings: str):
         return f'''<
