@@ -1,74 +1,139 @@
 """
-Takes a reference DataFrame and a subject one and tries to match the columns of the subject to the reference
+Takes two dataframes and tries to match them column by column
 """
 import pandas
 import numpy
-import logging
 from difflib import SequenceMatcher
-import statistics
-
-logger = logging.getLogger(__name__)
+from Levenshtein import ratio
+from nltk.corpus import wordnet
+from itertools import product
+from statsmodels.tsa.stattools import adfuller
+from dtaidistance import dtw
 
 
 class DataFrameMatcher:
-    def __init__(self, reference_df: pandas.DataFrame, subject_df: pandas.DataFrame):
-        self.reference_df = reference_df
-        self.subject_df = subject_df
+    def __init__(self, name_matcher, data_matcher, logger):
+        self.name_matcher = name_matcher
+        self.data_matcher = data_matcher
+        self.logger = logger
 
-    def match_dataframes(self):
+    def match_dataframes(self, df_a: pandas.DataFrame, df_b: pandas.DataFrame):
         """
-        Displays the columns of the subject DF with their possible matches in the reference DF
+        Returns all pairs of columns from dataframes A and B with their confidence percentages based on the column
+        names, and on the column contents.
         :return:
         """
 
         similarities = []
-        for column in self.reference_df.columns:
-            similarities.append({
-                'column': column,
-                'percentage': 0.0,
-            })
 
-        for column in self.subject_df.columns:
-            print(column)
+        for column_a in df_a.columns:
+            for column_b in df_b.columns:
+                name_confidence = self.name_matcher(column_a, column_b)
+                data_confidence = self.data_matcher(df_a.loc[:, column_a], df_b.loc[:, column_b])
 
-            for i in range(0, len(similarities)):
-                similarities[i]['percentage'] = self._match_columns(similarities[i]['column'], column)
+                similarity = {
+                    'column_a': column_a,
+                    'column_b': column_b,
+                    'name_confidence': name_confidence,
+                    'data_confidence': data_confidence,
+                }
+                self.logger.debug(similarity)
+                similarities.append(similarity)
 
-            similarities.sort(key=lambda x: x['percentage'], reverse=True)
+        return similarities
 
-            for item in similarities:
-                print(f"\t{item['column']} {item['percentage']}%")
-
-    def _match_columns(self, reference_column_name, subject_column_name):
+    @staticmethod
+    def is_column_stationary(series):
         """
-        Produces a percentage of similarity between 2 columns
-        :param reference_column_name:
-        :param subject_column_name:
+        Checks if the data in a column is stationary using the Dickey-Fuller test
+        :param series:
+        :return:
+        """
+        result = adfuller(series)
+        return result[0] < result[4]['5%']
+
+    @staticmethod
+    def match_data_identical_values(column_a, column_b):
+        """
+        Calculate a similarity percentage with set operations (intersection vs union) for (possible) categorical data
+        :param column_a:
+        :param column_b:
         :return:
         """
 
-        reference_column = self.reference_df.loc[:, reference_column_name]
-        subject_column = self.subject_df.loc[:, subject_column_name]
+        categorical_similarity = len(numpy.intersect1d(column_a, column_b)) / len(
+            numpy.union1d(column_a, column_b)) * 100
+        return categorical_similarity
 
-        percentages = []
+    @staticmethod
+    def match_data_pearson_coefficient(column_a, column_b):
+        """
+        Calculate the Pearson correlation coefficient between the 2 columns if they are both numerical
+        :param column_a:
+        :param column_b:
+        :return:
+        """
 
-        # Check how closely the names of the columns are related
-        name_similarity = SequenceMatcher(None, reference_column_name, subject_column_name).ratio() * 100
-        percentages.append(name_similarity)
+        if pandas.api.types.is_numeric_dtype(column_a) and pandas.api.types.is_numeric_dtype(column_b):
+            pearson_correlation_coefficient = abs(column_a.corr(column_b)) * 100
+            return pearson_correlation_coefficient
+        return 0
 
-        # Check if the 2 columns have the same data type
-        data_type_similarity = 100 if self.reference_df.dtypes[reference_column_name] == self.subject_df[subject_column_name] else 0
-        percentages.append(data_type_similarity)
+    @staticmethod
+    def match_data_dynamic_time_warping(column_a, column_b):
+        """
+        Calculate the normalized distance measure between two numerical columns using Dynamic Time Warping
+        :param column_a:
+        :param column_b:
+        :return:
+        """
 
-        # Calculate a similarity percentage with set operations (intersection vs union) for (possible) categorical data
-        if not pandas.api.types.is_numeric_dtype(reference_column) and not pandas.api.types.is_numeric_dtype(subject_column):
-            categorical_similarity = len(numpy.intersect1d(reference_column, subject_column)) / len(numpy.union1d(reference_column, subject_column)) * 100
-            percentages.append(categorical_similarity)
+        max_distance = len(column_a) * max(column_a)
 
-        # Calculate the Pearson correlation coefficient between the 2 columns if they are both numerical
-        if pandas.api.types.is_numeric_dtype(reference_column) and pandas.api.types.is_numeric_dtype(subject_column):
-            pearson_correlation_coefficient = abs(reference_column.corr(subject_column)) * 100
-            percentages.append(pearson_correlation_coefficient)
+        if pandas.api.types.is_numeric_dtype(column_a) and pandas.api.types.is_numeric_dtype(column_b):
+            return (max_distance - dtw.distance(column_a, column_b)) / max_distance * 100
+        return 0
 
-        # Produce a similarity percentage as an average of all checks
-        return round(sum(percentages) / len(percentages), 2)
+    @staticmethod
+    def match_data_trends(column_a, column_b):
+        pass
+
+    @staticmethod
+    def match_name_lcs(name_a, name_b):
+        """
+        Calculate the similarity of 2 column names using the Longest Contiguous Matching Subsequence
+        :param name_a:
+        :param name_b:
+        :return:
+        """
+
+        return SequenceMatcher(None, name_a, name_b).ratio() * 100
+
+    @staticmethod
+    def match_name_levenshtein(name_a, name_b):
+        """
+        Calculate the similarity of 2 column names using the Levenshtein distance
+        :param name_a:
+        :param name_b:
+        :return:
+        """
+
+        return ratio(name_a, name_b) * 100
+
+    @staticmethod
+    def match_name_wordnet(name_a, name_b):
+        """
+        Calculate the similarity of 2 column names using WordNet
+        :param name_a:
+        :param name_b:
+        :return:
+        """
+
+        synset_first = wordnet.synsets(name_a)
+        synset_second = wordnet.synsets(name_b)
+        wordnet_ratio = 0
+        if len(synset_first) > 0 and len(synset_second) > 0:
+            wordnet_ratio = max(
+                wordnet.wup_similarity(s1, s2) for s1, s2 in product(synset_first, synset_second)) * 100
+
+        return wordnet_ratio

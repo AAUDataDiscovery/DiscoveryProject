@@ -75,24 +75,18 @@ if __name__ == "__main__":
     # locally test the mock filesystem
     launch_config = yaml.safe_load(open("launch_config.yaml"))
     discovery_instance = Discovery(launch_config)
-    import os
 
-    if not os.path.exists('../test/mock_filesystem'):
-        raise "You forgot to create a mock filesystem!"
+    logger = logging.getLogger(__name__)
 
-    discovery_instance.add_files("../test/mock_filesystem")
-    discovery_instance.reconstruct_metadata()
-    discovery_instance.create_visual("test_visual")
-
-    from test.datagen import FakeDataGen
+    from utils.datagen import FakeDataGen
 
     fake_data = FakeDataGen()
-    fake_files = fake_data.build_df_to_file(1000, "matcher_test", index_type="categoric", continuous_data=5,
-                                            file_spread=2)
+    fake_files = fake_data.build_df_to_file(100000, path="test/output/matcher_test", index_type="counter",
+                                            continuous_data=10, file_spread=2)
     discovery_instance.add_file(fake_files[0])
     discovery_instance.add_file(fake_files[1])
 
-    dataframe_matcher = DataFrameMatcher(
-        discovery_instance.file_handler.loaded_files[fake_files[0]],
-        discovery_instance.file_handler.loaded_files[fake_files[1]])
-    dataframe_matcher.match_dataframes()
+    dataframe_matcher = DataFrameMatcher(DataFrameMatcher.match_name_wordnet,
+                                         DataFrameMatcher.match_data_pearson_coefficient)
+    dataframe_matcher.match_dataframes(discovery_instance.file_handler.loaded_files[fake_files[0]],
+                                       discovery_instance.file_handler.loaded_files[fake_files[1]])
