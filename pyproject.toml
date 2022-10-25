@@ -1,6 +1,6 @@
 [project]
 name = "DataCatalogueSystem"
-version = "0.0.2"
+version = "0.0.3"
 description = "This library is used to discover and assign metadata to large unrefined data sets"
 authors = [
     {name = "MII", email = "mnel.jnr@gmail.com"},
@@ -12,6 +12,11 @@ dependencies = [
     "pytest>=7.1.3",
     "flake8>=5.0.4",
     "faker>=15.0.0",
+    "levenshtein>=0.20.7",
+    "nltk>=3.7",
+    "plotly>=5.10.0",
+    "statsmodels>=0.13.2",
+    "dtaidistance>=2.3.10",
 ]
 requires-python = ">=3.10"
 license = {text = "MIT"}
