@@ -78,7 +78,7 @@ class Discovery:
         )
         results = dataframe_matcher.match_dataframes()
         for reference_col_name, subject_col_name, certainty in results:
-            column = next(iter([x for x in reference_metadatum.columns if x.name == reference_col_name]), None)
+            column = next((x for x in reference_metadatum.columns if x.name == reference_col_name), None)
             if column is not None:
                 column.add_relationship(certainty, subject_metadatum.hash, subject_col_name)
 
