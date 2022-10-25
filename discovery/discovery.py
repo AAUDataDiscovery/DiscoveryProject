@@ -6,9 +6,8 @@ import itertools
 
 import yaml
 import logging.config
-from pandas.api.types import is_numeric_dtype
 
-from utils.metadata.metadata import Metadata, ColMetadata
+from utils.metadata.metadata import construct_metadata_from_file_descriptor
 from utils.metadata.metadata_json_handler import write_metadata_to_json
 
 # set up local logging before importing local libs
@@ -51,21 +50,9 @@ class Discovery:
         """
         file_metadata = []
         for path, file_descriptor in self.file_handler.loaded_files.items():
-            metadatum = self._construct_metadatum(file_descriptor)
+            metadatum = construct_metadata_from_file_descriptor(file_descriptor)
             file_metadata.append((file_descriptor["dataframe"], metadatum))
         self.dataframe_file_metadata_pairs = file_metadata
-
-    def _construct_metadatum(self, file_descriptor):
-        metadatum = Metadata(file_descriptor["file_path"], file_descriptor["extension"],
-                             file_descriptor["size"], file_descriptor["file_hash"])
-        col_meta = []
-        dataframe = file_descriptor["dataframe"]
-
-        for col_name in dataframe.columns:
-            column_data = self._construct_column(dataframe[col_name])
-            col_meta.append(column_data)
-        metadatum.columns = col_meta
-        return metadatum
 
     def construct_relationships(self):
         for pair in itertools.combinations(self.dataframe_file_metadata_pairs, 2):
@@ -81,24 +68,6 @@ class Discovery:
             column = next((x for x in reference_metadatum.columns if x.name == reference_col_name), None)
             if column is not None:
                 column.add_relationship(certainty, subject_metadatum.hash, subject_col_name)
-
-    def _construct_column(self, column):
-        data_type = self._get_column_type(column)
-        average, col_min, col_max = self._get_col_statistical_values(column)
-        return ColMetadata(column.name, data_type, average, col_min, col_max)
-
-    def _get_col_statistical_values(self, column):
-        average, col_min, col_max = None, None, None
-
-        col_min = column.min()
-        col_max = column.max()
-
-        if is_numeric_dtype(column):
-            average = column.mean()
-        return average, col_min, col_max
-
-    def _get_column_type(self, column):
-        return column.dtype
 
     def get_loaded_files(self):
         return self.file_handler.loaded_files
