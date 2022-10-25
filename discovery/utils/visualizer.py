@@ -131,7 +131,7 @@ class Visualizer:
     def _add_all_previously_unobserved_parents_to_observed_nodes(self, parameter_child_node: SubGraphNode):
         working_child_node = parameter_child_node
         while True:
-            visited_parent = self._get_parent_if_parent_was_already_observed(working_child_node)
+            visited_parent = self._get_node_if_path_was_already_observed(working_child_node.filesystem_full_path)
             if visited_parent is None:
                 new_parent = SubGraphNode(working_child_node.get_parent_path())
                 new_parent.children.append(working_child_node)
@@ -145,6 +145,3 @@ class Visualizer:
         return next(iter([node for node in self.observed_nodes if node.filesystem_full_path == filesystem_full_path]),
                     None)
 
-    def _get_parent_if_parent_was_already_observed(self, node: SubGraphNode):
-        return next(iter([x for x in self.observed_nodes
-                          if x.filesystem_full_path == node.get_parent_path()]), None)
