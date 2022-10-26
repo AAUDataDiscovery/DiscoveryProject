@@ -2,9 +2,13 @@
 Entrypoint to the discovery project
 Reads a filesystem and tries to make some analysis based off of it
 """
+import itertools
+
 import yaml
 import logging.config
-from pandas.api.types import is_numeric_dtype
+
+from utils.metadata.metadata import construct_metadata_from_file_descriptor
+from utils.metadata.metadata_json_handler import write_metadata_to_json
 
 # set up local logging before importing local libs
 # TODO: do this a better way
@@ -27,32 +31,50 @@ class DiscoveryClient:
     def __init__(self, discovery_config: dict):
         self.config = discovery_config
         self.file_handler = FileHandler()
-        self.file_metadata = []
+        self.dataframe_file_metadata_pairs = []
         self.visualiser = Visualizer()
+        self.dataframe_matcher = DataFrameMatcher(
+            DataFrameMatcher.match_name_wordnet,
+            DataFrameMatcher.match_data_pearson_coefficient
+        )
 
     def create_visual(self, pathname):
         """
         Build a visual based on stored metadata
         """
-        self.visualiser.draw(self.file_metadata, pathname)
+
+        # TODO: find a fancy python way to do this
+        metadata = []
+        for dataframe, metadatum in self.dataframe_file_metadata_pairs:
+            metadata.append(metadatum)
+        self.visualiser.draw(metadata, pathname)
 
     def reconstruct_metadata(self):
         """
         Builds metadata based on the currently loaded files
         """
         file_metadata = []
-        for path, dataframe in self.file_handler.loaded_files.items():
-            col_meta = []
-            for col_name in dataframe.columns:
-                average, col_min, col_max = None, None, None
-                if is_numeric_dtype(dataframe[col_name]):
-                    average = dataframe[col_name].mean()
-                    col_min = dataframe[col_name].min()
-                    col_max = dataframe[col_name].max()
-                col_meta.append(ColMetadata(col_name, dataframe[col_name].dtype, average, col_min, col_max))
+        for path, file_descriptor in self.file_handler.loaded_files.items():
+            metadatum = construct_metadata_from_file_descriptor(file_descriptor)
+            file_metadata.append((file_descriptor["dataframe"], metadatum))
+        self.dataframe_file_metadata_pairs = file_metadata
 
-            file_metadata.append(Metadata(path, col_meta))
-        self.file_metadata = file_metadata
+    def construct_relationships(self):
+        for pair in itertools.combinations(self.dataframe_file_metadata_pairs, 2):
+            self._match_metadata(pair[0][0], pair[0][1], pair[1][0], pair[1][1])
+
+    def _match_metadata(self, reference_dataframe, reference_metadatum, subject_dataframe, subject_metadatum):
+        """
+        Run the dataframe matcher with the two given dataframes
+        Update the metadata to reflect the changes
+        """
+        results = self.dataframe_matcher.match_dataframes(reference_dataframe, subject_dataframe)
+        for relationship in results:
+            column = next((x for x in reference_metadatum.columns if x.name == relationship['column_a']), None)
+            if column is not None:
+                column.add_relationship(
+                    relationship['data_confidence'], subject_metadatum.hash, relationship['column_b']
+                )
 
     def get_loaded_files(self):
         return self.file_handler.loaded_files
@@ -74,17 +96,9 @@ class DiscoveryClient:
 if __name__ == "__main__":
     # locally test the mock filesystem
     launch_config = yaml.safe_load(open("launch_config.yaml"))
-    discovery_instance = DiscoveryClient(launch_config)
-    import os
+    discovery_instance = Discovery(launch_config)
 
-    if not os.path.exists('../test/mock_filesystem'):
-        raise "You forgot to create a mock filesystem!"
-
-    discovery_instance.add_files("../test/mock_filesystem")
-    discovery_instance.reconstruct_metadata()
-    discovery_instance.create_visual("test_visual")
-
-    from discovery.utils.datagen import FakeDataGen
+    from utils.datagen import FakeDataGen
 
     fake_data = FakeDataGen()
     fake_files = fake_data.build_df_to_file(1000, "matcher_test", index_type="categoric", continuous_data=5,
@@ -92,7 +106,10 @@ if __name__ == "__main__":
     discovery_instance.add_file(fake_files[0])
     discovery_instance.add_file(fake_files[1])
 
-    dataframe_matcher = DataFrameMatcher(
-        discovery_instance.file_handler.loaded_files[fake_files[0]],
-        discovery_instance.file_handler.loaded_files[fake_files[1]])
-    dataframe_matcher.match_dataframes()
+    discovery_instance.reconstruct_metadata()
+    discovery_instance.construct_relationships()
+
+    for dataframe, metadata in discovery_instance.dataframe_file_metadata_pairs:
+        write_metadata_to_json(metadata)
+
+    discovery_instance.create_visual("test_visual")

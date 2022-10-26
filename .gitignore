@@ -133,3 +133,7 @@ test/mock_filesystem
 .idea
 .pdm.toml
 bma_test_program.py
+/test/output/
+/discovery/test/output/
+
+discovery/sandbox/output/
