@@ -1,6 +1,10 @@
 """
 Takes two dataframes and tries to match them column by column
 """
+# TODO: currently not working out of the box, must be run with the following statements...
+# >>> import nltk
+# >>> nltk.download('wordnet')
+# >>> nltk.download('omw-1.4')
 import pandas
 import numpy
 from difflib import SequenceMatcher

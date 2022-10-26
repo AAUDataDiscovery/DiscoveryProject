@@ -32,6 +32,11 @@ class Discovery:
         self.file_handler = FileHandler()
         self.dataframe_file_metadata_pairs = []
         self.visualiser = Visualizer()
+        self.dataframe_matcher = DataFrameMatcher(
+            DataFrameMatcher.match_name_wordnet,
+            DataFrameMatcher.match_data_pearson_coefficient,
+            logger
+        )
 
     def create_visual(self, pathname):
         """
@@ -59,15 +64,17 @@ class Discovery:
             self._match_metadata(pair[0][0], pair[0][1], pair[1][0], pair[1][1])
 
     def _match_metadata(self, reference_dataframe, reference_metadatum, subject_dataframe, subject_metadatum):
-        dataframe_matcher = DataFrameMatcher(
-            reference_dataframe,
-            subject_dataframe
-        )
-        results = dataframe_matcher.match_dataframes()
-        for reference_col_name, subject_col_name, certainty in results:
-            column = next((x for x in reference_metadatum.columns if x.name == reference_col_name), None)
+        """
+        Run the dataframe matcher with the two given dataframes
+        Update the metadata to reflect the changes
+        """
+        results = self.dataframe_matcher.match_dataframes(reference_dataframe, subject_dataframe)
+        for relationship in results:
+            column = next((x for x in reference_metadatum.columns if x.name == relationship['column_a']), None)
             if column is not None:
-                column.add_relationship(certainty, subject_metadatum.hash, subject_col_name)
+                column.add_relationship(
+                    relationship['data_confidence'], subject_metadatum.hash, relationship['column_b']
+                )
 
     def get_loaded_files(self):
         return self.file_handler.loaded_files
@@ -90,21 +97,8 @@ if __name__ == "__main__":
     # locally test the mock filesystem
     launch_config = yaml.safe_load(open("launch_config.yaml"))
     discovery_instance = Discovery(launch_config)
-    import os
 
-    if not os.path.exists('../test/mock_filesystem'):
-        raise "You forgot to create a mock filesystem!"
-
-    discovery_instance.add_files("../test/mock_filesystem")
-    discovery_instance.reconstruct_metadata()
-    discovery_instance.construct_relationships()
-
-    for dataframe, metadata in discovery_instance.dataframe_file_metadata_pairs:
-        write_metadata_to_json(metadata)
-
-    discovery_instance.create_visual("test_visual")
-
-    from test.datagen import FakeDataGen
+    from utils.datagen import FakeDataGen
 
     fake_data = FakeDataGen()
     fake_files = fake_data.build_df_to_file(1000, "matcher_test", index_type="categoric", continuous_data=5,
@@ -112,7 +106,10 @@ if __name__ == "__main__":
     discovery_instance.add_file(fake_files[0])
     discovery_instance.add_file(fake_files[1])
 
-    dataframe_matcher = DataFrameMatcher(
-        discovery_instance.file_handler.loaded_files[fake_files[0]],
-        discovery_instance.file_handler.loaded_files[fake_files[1]])
-    dataframe_matcher.match_dataframes()
+    discovery_instance.reconstruct_metadata()
+    discovery_instance.construct_relationships()
+
+    for dataframe, metadata in discovery_instance.dataframe_file_metadata_pairs:
+        write_metadata_to_json(metadata)
+
+    discovery_instance.create_visual("test_visual")
