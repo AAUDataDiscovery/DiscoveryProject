@@ -34,8 +34,7 @@ class Discovery:
         self.visualiser = Visualizer()
         self.dataframe_matcher = DataFrameMatcher(
             DataFrameMatcher.match_name_wordnet,
-            DataFrameMatcher.match_data_pearson_coefficient,
-            logger
+            DataFrameMatcher.match_data_pearson_coefficient
         )
 
     def create_visual(self, pathname):

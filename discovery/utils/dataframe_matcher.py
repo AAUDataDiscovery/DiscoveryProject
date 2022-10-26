@@ -1,6 +1,8 @@
 """
 Takes two dataframes and tries to match them column by column
 """
+import logging
+
 # TODO: currently not working out of the box, must be run with the following statements...
 # >>> import nltk
 # >>> nltk.download('wordnet')
@@ -14,12 +16,13 @@ from itertools import product
 from statsmodels.tsa.stattools import adfuller
 from dtaidistance import dtw
 
+logger = logging.getLogger(__name__)
+
 
 class DataFrameMatcher:
-    def __init__(self, name_matcher, data_matcher, logger):
+    def __init__(self, name_matcher, data_matcher):
         self.name_matcher = name_matcher
         self.data_matcher = data_matcher
-        self.logger = logger
 
     def match_dataframes(self, df_a: pandas.DataFrame, df_b: pandas.DataFrame):
         """
@@ -41,7 +44,7 @@ class DataFrameMatcher:
                     'name_confidence': name_confidence,
                     'data_confidence': data_confidence,
                 }
-                self.logger.debug(similarity)
+                logger.debug(similarity)
                 similarities.append(similarity)
 
         return similarities
