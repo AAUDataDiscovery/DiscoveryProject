@@ -4,8 +4,9 @@ Ensure that the discovery system can detect and load test data
 import os
 
 from _pytest.fixtures import fixture
-from discovery import Discovery
-from utils.datagen import FakeDataGen
+from discovery import DiscoveryClient
+from discovery.utils.datagen import FakeDataGen
+
 
 @fixture(scope="session")
 def mock_data_folder(tmp_path_factory):
@@ -17,7 +18,7 @@ def mock_data_folder(tmp_path_factory):
 
 @fixture
 def discovery_instance():
-    return Discovery({})
+    return DiscoveryClient({})
 
 
 def test_simple_detection(discovery_instance, mock_data_folder):

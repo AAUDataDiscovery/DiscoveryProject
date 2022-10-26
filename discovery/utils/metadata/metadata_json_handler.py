@@ -1,9 +1,9 @@
 import json
-from utils.metadata.metadata import Metadata, ColMetadata, Relationship
 from pandas.api.types import is_numeric_dtype
 from pandas.api.types import is_string_dtype
 import numbers
 
+from discovery.utils.metadata.metadata import Metadata, ColMetadata, Relationship
 
 def write_metadata_to_json(metadata: Metadata):
     dictionary_representation = get_metadata_dictionary_representation(metadata)

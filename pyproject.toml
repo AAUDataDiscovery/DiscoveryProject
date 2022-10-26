@@ -1,6 +1,6 @@
 [project]
 name = "DataCatalogueSystem"
-version = "0.0.4"
+version = "0.1.0"
 description = "This library is used to discover and assign metadata to large unrefined data sets"
 authors = [
     {name = "MII", email = "mnel.jnr@gmail.com"},
@@ -17,6 +17,7 @@ dependencies = [
     "plotly>=5.10.0",
     "statsmodels>=0.13.2",
     "dtaidistance>=2.3.10",
+    "setuptools>=65.5.0",
 ]
 requires-python = ">=3.10"
 license = {text = "MIT"}
@@ -27,3 +28,4 @@ build-backend = "pdm.pep517.api"
 
 [tool]
 [tool.pdm]
+package-dir = "discovery"

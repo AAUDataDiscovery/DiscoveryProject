@@ -5,10 +5,10 @@ import os
 
 import pandas
 import logging
-
-from utils.custom_exceptions import UnsupportedFileExtension, FileNotFoundError
-from utils.metadata_enums import FileExtension, FileSizeUnit
 from pandas.util import hash_pandas_object
+
+from discovery.utils.custom_exceptions import UnsupportedFileExtension, FileNotFoundError
+from discovery.utils.metadata_enums import FileExtension, FileSizeUnit
 
 logger = logging.getLogger(__name__)
 

@@ -3,7 +3,7 @@ Ensure that a custom exception doesn't terminate the process
 """
 import logging
 
-from utils.custom_exceptions import CustomException
+from discovery.utils.custom_exceptions import CustomException
 
 
 def persistence(function):
