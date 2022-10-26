@@ -3,13 +3,10 @@ Data storage in memory
 """
 from typing import Union
 
-import pandas
-
-from utils.metadata_enums import FileSizeUnit, FileExtension
 from abc import ABC, abstractmethod
 from pandas.api.types import is_numeric_dtype
 
-import numbers
+from discovery.utils.metadata_enums import FileSizeUnit, FileExtension
 
 
 class Relationship:

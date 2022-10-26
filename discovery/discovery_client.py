@@ -7,9 +7,6 @@ import itertools
 import yaml
 import logging.config
 
-from utils.metadata.metadata import construct_metadata_from_file_descriptor
-from utils.metadata.metadata_json_handler import write_metadata_to_json
-
 # set up local logging before importing local libs
 # TODO: do this a better way
 if __name__ == "__main__":
@@ -19,12 +16,13 @@ if __name__ == "__main__":
 
     logger = logging.getLogger(__name__)
 
+from discovery.utils.metadata.metadata import construct_metadata_from_file_descriptor
+from discovery.utils.metadata.metadata_json_handler import write_metadata_to_json
 from discovery.utils.decorators.type_enforcer import type_enforcer
 from discovery.utils.dataframe_matcher import DataFrameMatcher
 from discovery.utils.file_handler import FileHandler
 from discovery.utils.decorators.persist_execution import persistence
 from discovery.utils.visualizer import Visualizer
-from discovery.utils.metadata import Metadata, ColMetadata
 
 
 class DiscoveryClient:
@@ -96,7 +94,7 @@ class DiscoveryClient:
 if __name__ == "__main__":
     # locally test the mock filesystem
     launch_config = yaml.safe_load(open("launch_config.yaml"))
-    discovery_instance = Discovery(launch_config)
+    discovery_instance = DiscoveryClient(launch_config)
 
     from utils.datagen import FakeDataGen
 
