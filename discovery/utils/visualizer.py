@@ -1,18 +1,17 @@
 from typing import Optional
-
 import graphviz
 
-from utils.metadata import Metadata
+from utils.metadata.metadata import Metadata
 
 
 class SubGraphNode:
     children: []
-    fs_full_path: str
+    filesystem_full_path: str
     graph: graphviz.Digraph
 
-    def __init__(self, fs_full_path, graph: Optional[graphviz.Graph] = None):
+    def __init__(self, filesystem_full_path, graph: Optional[graphviz.Graph] = None):
         self.children = []
-        self.fs_full_path = fs_full_path
+        self.filesystem_full_path = filesystem_full_path
         self._set_graph(graph)
 
     def _set_graph(self, graph: Optional[graphviz.Graph]):
@@ -22,20 +21,20 @@ class SubGraphNode:
             self.graph = graph
 
     def _generate_graph(self):
-        subgraph = graphviz.Graph(name="cluster_" + self.fs_full_path)
-        subgraph.attr(label=self.fs_full_path)
+        subgraph = graphviz.Graph(name="cluster_" + self.filesystem_full_path)
+        subgraph.attr(label=self.filesystem_full_path)
         subgraph.attr(color='grey')
         return subgraph
 
     def get_parent_path(self):
-        split = self.fs_full_path.rsplit('/', 1)
+        split = self.filesystem_full_path.rsplit('/', 1)
         if 1 < len(split):
             return split[0]
         return ""
 
-    def recursively_add_subgraphs(self):
+    def recursively_append_subgraphs(self):
         for child in self.children:
-            child.recursively_add_subgraphs()
+            child.recursively_append_subgraphs()
             self.graph.subgraph(child.graph)
         return
 
@@ -45,45 +44,63 @@ class Visualizer:
 
     root: SubGraphNode
     working_node: SubGraphNode
-    visited_nodes: [SubGraphNode]
+    observed_nodes: [SubGraphNode]
 
     def __init__(self, engine="fdp"):
         self.engine = engine
-        self.visited_nodes = []
-        self.root = SubGraphNode("", self._generate_start_graph())
+        self.observed_nodes = []
+        self.root = SubGraphNode("", self._generate_root_graph())
         self.working_node = self.root
-        self.visited_nodes.append(self.working_node)
+        self.observed_nodes.append(self.working_node)
 
-    def _generate_start_graph(self):
+    def _generate_root_graph(self):
         start_graph = graphviz.Graph(name="cluster_root", comment='File Visualization',
                                      node_attr={'shape': 'plaintext'})
         start_graph.attr(label="")
         start_graph.engine = self.engine
         return start_graph
 
-    def _draw_metadata(self, metadata: Metadata):
-        cols = self._draw_columns(metadata)
-        filled_table = self._generate_table(metadata.filepath, cols)
-        self.working_node.graph.node(metadata.filepath, filled_table)
+    def draw(self, metadata: [Metadata], filename: str):
+        self._draw_metadata(metadata)
+        # self.draw_relationships(metadata)
+        self._finalize_result_graph(filename)
 
-    def _draw_columns(self, metadatum):
-        col_row: str = ''
+    def _draw_metadata(self, metadata):
+        for datum in metadata:
+            self.working_node = self._determine_working_node(datum.file_path)
+            self._draw_metadatum(datum)
+
+    # Don't use it, not implemented properly
+    def _draw_relationships(self, metadata):
+        for metadatum in metadata:
+            for column in metadatum.columns:
+                for relationship in column.relationships:
+                    self.root.graph.edge(f"{metadatum.hash}:{column.name}",
+                                         f"{relationship.target_file_hash}:{relationship.target_column_name}",
+                                         str(relationship.certainty)
+                                         )
+
+    def _finalize_result_graph(self, output_filename):
+        self.root.recursively_append_subgraphs()
+        self.root.graph.view(output_filename)
+
+    def _draw_metadatum(self, metadatum: Metadata):
+        columns = self._draw_table_columns(metadatum)
+        filled_table = self._draw_filled_metadatum_table(metadatum.file_path, columns)
+        self.working_node.graph.node(str(metadatum.hash), filled_table)
+
+    # TODO: make it more generic
+    def _draw_table_columns(self, metadatum):
+        col_rows: str = ""
         for column in metadatum.columns:
-            col_row += "<TR><TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD></TR>" \
+            col_rows += '<TR><TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD></TR>' \
                 .format(column.name, column.col_type,
                         (column.mean if column.mean is not None else "NA"),
-                        column.min, column.max)
-        return col_row
-
-    def draw(self, metadata: [Metadata], filename: str):
-        for datum in metadata:
-            self.working_node = self._determine_working_node(datum.filepath)
-            self._draw_metadata(datum)
-        self.root.recursively_add_subgraphs()
-        self.root.graph.view(filename)
+                        column.minimum, column.maximum)
+        return col_rows
 
     # TODO: find a more generic approach
-    def _generate_table(self, filename: str, col_strings: str):
+    def _draw_filled_metadatum_table(self, filename: str, col_strings: str):
         return f'''<
             <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
               <TR>
@@ -100,29 +117,31 @@ class Visualizer:
               {col_strings}
             </TABLE>>'''
 
-    def _determine_working_node(self, full_path):
-        # directory already registered as a node
-        already_visited = next(iter([x for x in self.visited_nodes if x.fs_full_path == full_path]), None)
-        if already_visited is not None:
-            return already_visited
+    def _determine_working_node(self, filesystem_full_path: str):
+        determined_node = None
 
-        new_node = SubGraphNode(full_path)
+        already_visited_node = self._get_node_if_path_was_already_observed(filesystem_full_path)
+        if already_visited_node is not None:
+            determined_node = already_visited_node
+        else:
+            determined_node = SubGraphNode(filesystem_full_path)
+            self._add_all_previously_unobserved_parents_to_observed_nodes(determined_node)
+        return determined_node
 
-        # ensure that the tree has all ancenstors, even if no files were registered previously
-        child = new_node
+    def _add_all_previously_unobserved_parents_to_observed_nodes(self, parameter_child_node: SubGraphNode):
+        working_child_node = parameter_child_node
         while True:
-            visited_parent = self._get_visited_parent(child)
+            visited_parent = self._get_node_if_path_was_already_observed(working_child_node.filesystem_full_path)
             if visited_parent is None:
-                new_parent = SubGraphNode(child.get_parent_path())
-                new_parent.children.append(child)
-
+                new_parent = SubGraphNode(working_child_node.get_parent_path())
+                new_parent.children.append(working_child_node)
                 # setup next loop
-                child = new_parent
+                working_child_node = new_parent
             else:
-                visited_parent.children.append(child)
+                visited_parent.children.append(working_child_node)
                 break
-        return new_node
 
-    def _get_visited_parent(self, node: SubGraphNode):
-        return next(iter([x for x in self.visited_nodes
-                          if x.fs_full_path == node.get_parent_path()]), None)
+    def _get_node_if_path_was_already_observed(self, filesystem_full_path: str):
+        return next(iter([node for node in self.observed_nodes if node.filesystem_full_path == filesystem_full_path]),
+                    None)
+
