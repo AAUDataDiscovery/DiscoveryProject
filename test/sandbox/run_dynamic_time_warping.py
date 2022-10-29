@@ -1,7 +1,6 @@
 import yaml
 import logging.config
-from dtaidistance import dtw
-from dtaidistance import dtw_visualisation as dtwvis
+import numpy as np
 
 from utils.file_handler import FileHandler
 from utils.datagen import FakeDataGen
@@ -30,6 +29,8 @@ if __name__ == "__main__":
             continue
 
         for column2 in df2.columns:
-            distance = DataFrameMatcher.match_data_dynamic_time_warping(df1.loc[:, column1], df2.loc[:, column2])
+            normalized_column1 = df1.loc[:, column1] / np.max(np.abs(df1.loc[:, column1]), axis=0)
+            normalized_column2 = df2.loc[:, column2] / np.max(np.abs(df2.loc[:, column2]), axis=0)
+            distance = DataFrameMatcher.match_data_dynamic_time_warping(normalized_column1, normalized_column2)
             logger.debug(
                 f"{column1} {column2} {distance}")
