@@ -22,8 +22,8 @@ if __name__ == "__main__":
     file_handler.load_file(fake_files[0])
     file_handler.load_file(fake_files[1])
 
-    df1 = file_handler.loaded_files[fake_files[0]]
-    df2 = file_handler.loaded_files[fake_files[1]]
+    df1 = file_handler.loaded_files[fake_files[0]]['dataframe']
+    df2 = file_handler.loaded_files[fake_files[1]]['dataframe']
 
     for column1 in df1.columns:
         if column1 == 'Unnamed: 0':
