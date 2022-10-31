@@ -1,22 +1,25 @@
-use std::rc::Rc;
-use std::sync::{Arc, mpsc, Mutex};
+use std::collections::HashMap;
+use std::fs::Metadata;
+use std::sync::mpsc;
 use std::sync::mpsc::{Receiver, Sender};
 use polars::prelude::LazyCsvReader;
 use crate::file_handling::file_loader::FileLoaderAction::LoadFile;
 use crate::metadata::metadata_handler::MetadataHandlerAction;
+use crate::utils::file_extension::FileExtension;
+use crate::utils::file_size_unit::FileSizeUnit;
 
 
 pub (crate) struct FileLoader {
     rx: Receiver<FileLoaderAction>,
-    communication_broker: Option<Arc<Mutex<CommunicationBroker>>>
+    pub(crate) metadata_handler_tx: Sender<MetadataHandlerAction>
 }
 
 impl FileLoader {
-    pub(crate) fn new() -> (Sender<FileLoaderAction>, FileLoader) {
+    pub(crate) fn new( metadata_handler_tx: Sender<MetadataHandlerAction>) -> (Sender<FileLoaderAction>, FileLoader) {
         let (tx, rx) = mpsc::channel();
         let file_loader = FileLoader {
             rx,
-            communication_broker: None
+            metadata_handler_tx
         };
         (tx, file_loader)
     }
@@ -30,26 +33,10 @@ impl FileLoader {
     }
 
     fn handle_load_file_request(&self, path: String, size: u64) {
-        let df = LazyCsvReader::new(path.as_str());
-        let tx = self.communication_broker
-            .as_ref()
-            .unwrap()
-            .lock()
-            .unwrap()
-            .get_metadata_handler_tx();
-
-        let message = MetadataHandlerAction::CreateMetadata {
-            path,
-            size,
-            df: df.finish().unwrap()
-        };
-        tx.send(message);
-    }
-    pub (crate) fn set_communication_broker(&mut self, communication_broker: Arc<Mutex<CommunicationBroker>>) {
-        self.communication_broker = Option::from(communication_broker);
+        let df = LazyCsvReader::new(path.as_str()).finish().unwrap();
+        self.metadata_handler_tx.send(MetadataHandlerAction::CreateMetadata {path, size, df});
     }
 }
-
 
 pub (crate) enum FileLoaderAction {
     LoadFile {path: String, size: u64 },
