@@ -28,6 +28,7 @@ if __name__ == "__main__":
         resolution = len(df.loc[:, column])
         probability = 0
         normalized_series = df.loc[:, column] / np.max(np.abs(df.loc[:, column]), axis=0)
+        logger.debug(f"{column}:")
         # We will test with 10, 50, and 100 datapoints per cycle
         for datapoints_per_cycle in [10, 50, 100]:
             cycles = resolution / datapoints_per_cycle
@@ -35,6 +36,9 @@ if __name__ == "__main__":
             sin_wave = np.sin(np.arange(0, length, length / resolution))
             # fig = px.line(sin_wave, title='Whatever')
             # plotly.offline.plot(fig)
-            distance = DataFrameMatcher.match_data_dynamic_time_warping(sin_wave, normalized_series)
-            logger.debug(distance)
-        logger.debug(f"{column} {probability / 3}")
+            dtw_similarity = DataFrameMatcher.match_data_dynamic_time_warping(sin_wave, normalized_series)
+            # logger.debug(f"Dynamic Time Warping similarity: {dtw_similarity}")
+
+            two_sample_t_test = DataFrameMatcher.match_data_two_sample_t_test(normalized_series, sin_wave)
+            logger.debug(f"Equal means ({datapoints_per_cycle} datapoint per cycle): {two_sample_t_test}")
+        logger.debug(f"\n")

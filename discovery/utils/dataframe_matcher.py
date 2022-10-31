@@ -7,6 +7,7 @@ import logging
 # >>> import nltk
 # >>> nltk.download('wordnet')
 # >>> nltk.download('omw-1.4')
+import numpy as np
 import pandas
 import numpy
 from difflib import SequenceMatcher
@@ -15,6 +16,7 @@ from nltk.corpus import wordnet
 from itertools import product
 from statsmodels.tsa.stattools import adfuller
 from dtaidistance import dtw
+import scipy.stats as stats
 
 logger = logging.getLogger(__name__)
 
@@ -102,8 +104,30 @@ class DataFrameMatcher:
         return 0
 
     @staticmethod
-    def match_data_trends(column_a, column_b):
-        pass
+    def match_data_two_sample_t_test(column_a, column_b):
+        """
+        Determine if the unknown population means of the two groups are equal
+        :param column_a:
+        :param column_b:
+        :return:
+        """
+
+        # Normalize the data
+        column_a = column_a / np.max(np.abs(column_a), axis=0)
+        column_b = column_b / np.max(np.abs(column_b), axis=0)
+
+        # First, we determine if the 2 groups have the same variance
+        # A ratio of less than 4:1 indicates we should consider the variances equal
+        variance_a = np.var(column_a)
+        variance_b = np.var(column_b)
+        equal_variances = (max(variance_a, variance_b) / min(variance_a, variance_b)) < 4
+
+        # Perform the two sample T-test
+        result_statistic, result_p_value = stats.ttest_ind(column_a, column_b, equal_var=equal_variances)
+
+        # If the p-value is greater than 0.05, we accept the null hypothesis that the mean of the two groups is equal
+        # Otherwise, we reject it, and claim that the means are different
+        return result_p_value > 0.05
 
     @staticmethod
     def match_name_lcs(name_a, name_b):
