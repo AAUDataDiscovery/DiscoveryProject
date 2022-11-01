@@ -22,9 +22,8 @@ logger = logging.getLogger(__name__)
 
 
 class DataFrameMatcher:
-    def __init__(self, name_matcher, data_matcher):
-        self.name_matcher = name_matcher
-        self.data_matcher = data_matcher
+    def __init__(self, methods):
+        self.methods = methods
 
     def match_dataframes(self, df_a: pandas.DataFrame, df_b: pandas.DataFrame):
         """
@@ -37,14 +36,23 @@ class DataFrameMatcher:
 
         for column_a in df_a.columns:
             for column_b in df_b.columns:
-                name_confidence = self.name_matcher(column_a, column_b)
-                data_confidence = self.data_matcher(df_a.loc[:, column_a], df_b.loc[:, column_b])
+                results = []
+                for method in self.methods:
+                    if method.__name__.startswith('match_data_'):
+                        method_confidence = method(df_a.loc[:, column_a], df_b.loc[:, column_b])
+                    else:
+                        method_confidence = method(column_a, column_b)
+
+                    result = {
+                        'name': method.__name__,
+                        'confidence': method_confidence,
+                    }
+                    results.append(result)
 
                 similarity = {
                     'column_a': column_a,
                     'column_b': column_b,
-                    'name_confidence': name_confidence,
-                    'data_confidence': data_confidence,
+                    'results': results,
                 }
                 logger.debug(similarity)
                 similarities.append(similarity)
