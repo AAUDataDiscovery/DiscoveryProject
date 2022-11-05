@@ -7,6 +7,7 @@ from abc import ABC, abstractmethod
 from pandas.api.types import is_numeric_dtype
 
 from discovery.utils.metadata_enums import FileSizeUnit, FileExtension
+from utils.dataframe_matcher import DataFrameMatcher
 
 
 class Relationship:
@@ -26,9 +27,10 @@ class ColMetadata(ABC):
     columns: any  # [ColMetadata]
     relationships: [Relationship]
 
-    def __init__(self, name: str, col_type: str, columns=None):
+    def __init__(self, name: str, col_type: str, continuity: float, columns=None):
         self.name = name
         self.col_type = col_type
+        self.continuity = continuity
         self.columns = columns
         self.relationships = []
 
@@ -44,16 +46,20 @@ class NumericColMetadata(ColMetadata):
     minimum: any
     maximum: any
 
-    def __init__(self, name: str, col_type: str, mean: Union[int, float, None], min_val, max_val, columns=None):
-        ColMetadata.__init__(self, name, col_type, columns)
+    def __init__(self, name: str, col_type: str, is_numeric_percentage: float, continuity: float,
+                 mean: Union[int, float, None], min_val, max_val,
+                 stationarity: bool, columns=None):
+        ColMetadata.__init__(self, name, col_type, continuity, columns)
+        self.is_numeric_percentage = is_numeric_percentage
         self.mean = mean
         self.minimum = min_val
         self.maximum = max_val
+        self.stationarity = stationarity
 
 
 class CategoricalColMetadata(ColMetadata):
-    def __init__(self, name: str, col_type: str, columns=None):
-        ColMetadata.__init__(self, name, col_type, columns)
+    def __init__(self, name: str, col_type: str, continuity: float, columns=None):
+        ColMetadata.__init__(self, name, col_type, continuity)
 
 
 class Metadata:
@@ -81,16 +87,24 @@ def construct_metadata_from_file_descriptor(file_descriptor):
 
 
 def construct_column(column):
-    average, col_min, col_max = get_col_statistical_values(column)
-    return NumericColMetadata(column.name, column.dtype, average, col_min, col_max)
+    is_numeric_probability, average, col_min, col_max, continuity, stationarity = get_col_statistical_values(column)
+    return NumericColMetadata(column.name, column.dtype, is_numeric_probability, continuity, average, col_min, col_max,
+                              stationarity)
 
 
 def get_col_statistical_values(column):
-    average, col_min, col_max = None, None, None
+    numerified_column = DataFrameMatcher.numerify_column(column)
+
+    is_numeric_probability = DataFrameMatcher.column_numeric_percentage(column)
+    is_numeric = is_numeric_probability >= 0.5
 
     col_min = column.min()
     col_max = column.max()
 
-    if is_numeric_dtype(column):
-        average = column.mean()
-    return average, col_min, col_max
+    continuity = DataFrameMatcher.column_is_continuous_probability(column)
+
+    stationarity = DataFrameMatcher.is_column_stationary(numerified_column) if is_numeric else None
+
+    average = numerified_column.mean() if is_numeric else None
+
+    return is_numeric_probability, average, col_min, col_max, continuity, stationarity

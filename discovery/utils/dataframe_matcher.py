@@ -60,6 +60,24 @@ class DataFrameMatcher:
         return similarities
 
     @staticmethod
+    def numerify_column(series):
+        """
+        Transform all values in a column to a numeric data type. Values that can't be transformed will be removed
+        :param series:
+        :return:
+        """
+        return pandas.to_numeric(series, 'coerce').dropna()
+
+    @staticmethod
+    def column_numeric_percentage(series):
+        """
+        Determine the percentage of numeric values in a column
+        :param series:
+        :return:
+        """
+        return len(DataFrameMatcher.numerify_column(series)) / len(series)
+
+    @staticmethod
     def is_column_stationary(series):
         """
         Checks if the data in a column is stationary using the Dickey-Fuller test
@@ -68,6 +86,15 @@ class DataFrameMatcher:
         """
         result = adfuller(series)
         return result[0] < result[4]['5%']
+
+    @staticmethod
+    def column_is_continuous_probability(series):
+        """
+        Checks if the data in a column is continuous or categorical
+        :param series:
+        :return:
+        """
+        return series.nunique() / series.count()
 
     @staticmethod
     def match_data_identical_values(column_a, column_b):

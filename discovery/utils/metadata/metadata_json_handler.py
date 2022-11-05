@@ -27,9 +27,12 @@ def get_columns_dictionary_representation(columns: [ColMetadata]):
     for column in columns:
         column_dict = {
             "name": normalize_and_get_column_name(column.name),
+            "is_numeric_percentage": column.is_numeric_percentage,
+            "continuity": column.continuity,
             "mean": normalize_and_get_column_mean(column.mean),
             "minimum": normalize_and_get_column_min_max(column.minimum),
             "maximum": normalize_and_get_column_min_max(column.maximum),
+            "stationarity": 1 if column.stationarity else 0,
             "relationships": get_relationships_dictionary_representation(column.relationships)
         }
         if column.columns is not None:

@@ -19,6 +19,9 @@ if __name__ == "__main__":
     file_handler = FileHandler()
     file_handler.load_file(file_path)
 
+    dataframe_name = file_path[file_path.rindex('/') + 1:]
+    dataframe_name = dataframe_name[:dataframe_name.rfind(".")]
+
     file_descriptor = file_handler.loaded_files[file_path]
     metadatum = construct_metadata_from_file_descriptor(file_descriptor)
 

@@ -93,10 +93,12 @@ class Visualizer:
     def _draw_table_columns(self, metadatum):
         col_rows: str = ""
         for column in metadatum.columns:
-            col_rows += '<TR><TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD></TR>' \
-                .format(column.name, column.col_type,
+            col_rows += '<TR><TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD></TR>' \
+                .format(column.name, column.col_type, str(round(column.is_numeric_percentage * 100, 2)) + '%',
+                        str(round(column.continuity * 100, 2)) + '%',
                         (column.mean if column.mean is not None else "NA"),
-                        column.minimum, column.maximum)
+                        column.minimum, column.maximum,
+                        'NA' if column.stationarity is None else ('Yes' if column.stationarity == 1 else 'No'))
         return col_rows
 
     # TODO: find a more generic approach
@@ -109,10 +111,12 @@ class Visualizer:
               <TR>
                 <TD BGCOLOR="lightgray">Name</TD>
                 <TD BGCOLOR="lightgray">Type</TD>
+                <TD BGCOLOR="lightgray">Numeric</TD>
+                <TD BGCOLOR="lightgray">Continuity</TD>
                 <TD BGCOLOR="lightgray">Average</TD>
                 <TD BGCOLOR="lightgray">Lowest</TD>
                 <TD BGCOLOR="lightgray">Highest</TD>
-
+                <TD BGCOLOR="lightgray">Stationarity</TD>
               </TR>
               {col_strings}
             </TABLE>>'''
@@ -144,4 +148,3 @@ class Visualizer:
     def _get_node_if_path_was_already_observed(self, filesystem_full_path: str):
         return next(iter([node for node in self.observed_nodes if node.filesystem_full_path == filesystem_full_path]),
                     None)
-
