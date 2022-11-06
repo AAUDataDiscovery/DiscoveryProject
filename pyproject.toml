@@ -1,6 +1,6 @@
 [project]
 name = "DataCatalogueSystem"
-version = "0.1.0"
+version = "0.1.1"
 description = "This library is used to discover and assign metadata to large unrefined data sets"
 authors = [
     {name = "MII", email = "mnel.jnr@gmail.com"},
@@ -28,4 +28,8 @@ build-backend = "pdm.pep517.api"
 
 [tool]
 [tool.pdm]
-package-dir = "discovery"
+
+[tool.pdm.build]
+includes = [
+    "discovery/"
+]

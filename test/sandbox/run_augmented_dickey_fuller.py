@@ -9,7 +9,7 @@ from utils.datagen import FakeDataGen
 
 
 if __name__ == "__main__":
-    with open('../logging_conf.yaml', 'r') as f:
+    with open('../../discovery/logging_conf.yaml', 'r') as f:
         config = yaml.safe_load(f.read())
         logging.config.dictConfig(config)
 
