@@ -25,6 +25,16 @@ if __name__ == "__main__":
     file_descriptor = file_handler.loaded_files[file_path]
     metadatum = construct_metadata_from_file_descriptor(file_descriptor)
 
+    dataframe = file_descriptor['dataframe']
+    file_hash = file_descriptor['file_hash']
+    for i in range(len(metadatum.columns)):
+        for column_name in dataframe.columns:
+            column = dataframe.loc[:, column_name]
+            metadatum.columns[i].add_relationship(
+                DataFrameMatcher.match_columns(dataframe, metadatum.columns[i].name, dataframe, column_name),
+                file_hash,
+                column_name)
+
     write_metadata_to_json(metadatum)
 
     visualizer = Visualizer()

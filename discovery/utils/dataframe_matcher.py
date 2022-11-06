@@ -97,6 +97,44 @@ class DataFrameMatcher:
         return series.nunique() / series.count()
 
     @staticmethod
+    def match_columns(dataframe1, column1_name, dataframe2, column2_name):
+        """
+        Calculate the similarity of 2 columns using a combination of methods
+        :param series1:
+        :param series2:
+        :return:
+        """
+
+        similarity = 0
+        no_of_methods_used = 0
+
+        # Match by column names
+        similarity += DataFrameMatcher.match_name_lcs(column1_name, column2_name)
+        similarity += DataFrameMatcher.match_name_levenshtein(column1_name, column2_name)
+        no_of_methods_used = 2
+
+        # Match by values
+        series1 = dataframe1.loc[:, column1_name]
+        series2 = dataframe2.loc[:, column2_name]
+
+        similarity += DataFrameMatcher.match_data_identical_values(series1, series2)
+        no_of_methods_used += 1
+
+        # Match by numerical algorithms
+        numerified_series1 = DataFrameMatcher.numerify_column(series1)
+        numerified_series2 = DataFrameMatcher.numerify_column(series2)
+
+        if len(numerified_series1) >= 10 and len(numerified_series2) >= 10:
+            similarity += DataFrameMatcher.match_data_pearson_coefficient(numerified_series1, numerified_series2)
+            # similarity += DataFrameMatcher.match_data_dynamic_time_warping(numerified_series1, numerified_series2)
+            # similarity += DataFrameMatcher.match_data_two_sample_t_test(numerified_series1, numerified_series2)
+            no_of_methods_used += 1
+
+        # print(f"{column1_name} {column2_name} {similarity / no_of_methods_used}")
+
+        return similarity / no_of_methods_used
+
+    @staticmethod
     def match_data_identical_values(column_a, column_b):
         """
         Calculate a similarity percentage with set operations (intersection vs union) for (possible) categorical data
@@ -105,8 +143,11 @@ class DataFrameMatcher:
         :return:
         """
 
-        categorical_similarity = len(numpy.intersect1d(column_a, column_b)) / len(
-            numpy.union1d(column_a, column_b)) * 100
+        stringified_column_a = column_a.apply(str)
+        stringified_column_b = column_b.apply(str)
+
+        categorical_similarity = len(numpy.intersect1d(stringified_column_a, stringified_column_b)) / len(
+            numpy.union1d(stringified_column_a, stringified_column_b)) * 100
         return categorical_similarity
 
     @staticmethod
@@ -118,10 +159,8 @@ class DataFrameMatcher:
         :return:
         """
 
-        if pandas.api.types.is_numeric_dtype(column_a) and pandas.api.types.is_numeric_dtype(column_b):
-            pearson_correlation_coefficient = abs(column_a.corr(column_b)) * 100
-            return pearson_correlation_coefficient
-        return 0
+        pearson_correlation_coefficient = abs(column_a.corr(column_b)) * 100
+        return pearson_correlation_coefficient
 
     @staticmethod
     def match_data_dynamic_time_warping(column_a, column_b):
@@ -155,7 +194,10 @@ class DataFrameMatcher:
         # A ratio of less than 4:1 indicates we should consider the variances equal
         variance_a = np.var(column_a)
         variance_b = np.var(column_b)
-        equal_variances = (max(variance_a, variance_b) / min(variance_a, variance_b)) < 4
+        if min(variance_a, variance_b) == 0:
+            equal_variances = max(variance_a, variance_b) < 4
+        else:
+            equal_variances = (max(variance_a, variance_b) / min(variance_a, variance_b)) < 4
 
         # Perform the two sample T-test
         result_statistic, result_p_value = stats.ttest_ind(column_a, column_b, equal_var=equal_variances)

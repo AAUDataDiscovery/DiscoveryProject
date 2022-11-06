@@ -86,27 +86,31 @@ class Visualizer:
 
     def _draw_metadatum(self, metadatum: Metadata):
         columns = self._draw_table_columns(metadatum)
-        filled_table = self._draw_filled_metadatum_table(metadatum.file_path, columns)
+        filled_table = self._draw_filled_metadatum_table(metadatum, columns)
         self.working_node.graph.node(str(metadatum.hash), filled_table)
 
     # TODO: make it more generic
     def _draw_table_columns(self, metadatum):
         col_rows: str = ""
         for column in metadatum.columns:
-            col_rows += '<TR><TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD></TR>' \
+            col_rows += '<TR><TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD>' \
                 .format(column.name, column.col_type, str(round(column.is_numeric_percentage * 100, 2)) + '%',
                         str(round(column.continuity * 100, 2)) + '%',
                         (column.mean if column.mean is not None else "NA"),
                         column.minimum, column.maximum,
                         'NA' if column.stationarity is None else ('Yes' if column.stationarity == 1 else 'No'))
+
+            for relationship in column.relationships:
+                col_rows += '<TD>' + str(round(relationship.certainty, 2)) + '%</TD>'
+            col_rows += '</TR>'
         return col_rows
 
     # TODO: find a more generic approach
-    def _draw_filled_metadatum_table(self, filename: str, col_strings: str):
-        return f'''<
+    def _draw_filled_metadatum_table(self, metadatum, col_strings: str):
+        filled_table = f'''<
             <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
               <TR>
-                <TD COLSPAN="2" BGCOLOR="darkgrey">{filename}</TD>
+                <TD COLSPAN="2" BGCOLOR="darkgrey">{metadatum.file_path}</TD>
               </TR>
               <TR>
                 <TD BGCOLOR="lightgray">Name</TD>
@@ -117,9 +121,14 @@ class Visualizer:
                 <TD BGCOLOR="lightgray">Lowest</TD>
                 <TD BGCOLOR="lightgray">Highest</TD>
                 <TD BGCOLOR="lightgray">Stationarity</TD>
-              </TR>
-              {col_strings}
-            </TABLE>>'''
+                '''
+
+        for relationship in metadatum.columns[0].relationships:
+            filled_table += f"<TD BGCOLOR='lightgray'>Similarity to {relationship.target_column_name}</TD>"
+
+        filled_table += f"</TR>{col_strings}</TABLE>>"
+
+        return filled_table
 
     def _determine_working_node(self, filesystem_full_path: str):
         determined_node = None

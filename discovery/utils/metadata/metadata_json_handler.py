@@ -46,8 +46,8 @@ def get_relationships_dictionary_representation(relationships: [Relationship]):
     for relationship in relationships:
         relationships_list.append(
             {
-                "certainty": normalize_and_get_relationship_certainty(relationship.certainty),
-                "target_file_hash": normalize_and_get_hash(relationship.target_file_hash),
+                "certainty": str(relationship.certainty),
+                "target_file_hash": str(relationship.target_file_hash),
                 "target_column_name": normalize_and_get_column_name(relationship.target_column_name)
             }
         )
