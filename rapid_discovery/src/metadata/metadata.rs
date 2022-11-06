@@ -8,7 +8,7 @@ pub(crate) struct Metadata {
     pub(crate) file_path: String,
     pub(crate) extension: FileExtension,
     pub(crate) size: (u64, FileSizeUnit),
-    pub(crate) hash: i32,
+    pub(crate) hash: u32,
     pub(crate) columns: HashMap<String, Box<dyn ColMetadata>>,
 }
 impl Metadata {
@@ -16,7 +16,7 @@ impl Metadata {
         file_path: String,
         extension: FileExtension,
         size: (u64, FileSizeUnit),
-        hash: i32,
+        hash: u32,
         columns: HashMap<String, Box<dyn ColMetadata>>
     ) -> Metadata {
         return Metadata {
