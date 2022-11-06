@@ -100,8 +100,10 @@ class DataFrameMatcher:
     def match_columns(dataframe1, column1_name, dataframe2, column2_name):
         """
         Calculate the similarity of 2 columns using a combination of methods
-        :param series1:
-        :param series2:
+        :param column2_name:
+        :param dataframe2:
+        :param column1_name:
+        :param dataframe1:
         :return:
         """
 
@@ -124,7 +126,8 @@ class DataFrameMatcher:
         numerified_series1 = DataFrameMatcher.numerify_column(series1)
         numerified_series2 = DataFrameMatcher.numerify_column(series2)
 
-        if len(numerified_series1) >= 10 and len(numerified_series2) >= 10:
+        if DataFrameMatcher.column_numeric_percentage(series1) > 0.05 and \
+                DataFrameMatcher.column_numeric_percentage(series2) > 0.05:
             similarity += DataFrameMatcher.match_data_pearson_coefficient(numerified_series1, numerified_series2)
             # similarity += DataFrameMatcher.match_data_dynamic_time_warping(numerified_series1, numerified_series2)
             # similarity += DataFrameMatcher.match_data_two_sample_t_test(numerified_series1, numerified_series2)

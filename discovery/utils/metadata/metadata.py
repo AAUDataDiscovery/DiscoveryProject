@@ -96,7 +96,7 @@ def get_col_statistical_values(column):
     numerified_column = DataFrameMatcher.numerify_column(column)
 
     is_numeric_probability = DataFrameMatcher.column_numeric_percentage(column)
-    is_numeric = is_numeric_probability >= 0.5
+    is_numeric = is_numeric_probability > 0.05
 
     col_min = column.min()
     col_max = column.max()
