@@ -137,3 +137,5 @@ bma_test_program.py
 /discovery/test/output/
 
 test/sandbox/output/
+
+discovery/sandbox/data/
