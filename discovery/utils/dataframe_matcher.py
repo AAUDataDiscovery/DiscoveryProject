@@ -16,6 +16,7 @@ from nltk.corpus import wordnet
 from itertools import product
 from dtaidistance import dtw
 import scipy.stats as stats
+import numbers
 
 from discovery.utils.metadata import metadata
 from discovery.utils.metadata.metadata import Metadata, NumericColMetadata
@@ -93,6 +94,10 @@ class DataFrameMatcher:
         :return:
         """
         scores = {}
+        no_of_tests = {}
+        average_differences = {}
+        minimum_differences = {}
+        maximum_differences = {}
         for column2 in metadata2.columns:
             # LCS name test
             lcs_percentage = DataFrameMatcher.match_name_lcs(column1.name, column2.name)
@@ -110,11 +115,53 @@ class DataFrameMatcher:
             numerical_percentage = 100 * (1 - abs(column1.is_numeric_percentage -
                                                   column2.is_numeric_percentage))
 
+            # Average test
+            if column1.mean is not None and column2.mean is not None:
+                average_differences[column2.name] = abs(column1.mean - column2.mean)
+
+            # Min test
+            try:
+                minimum1 = float(column1.minimum)
+                minimum2 = float(column2.minimum)
+                minimum_differences[column2.name] = abs(minimum1 - minimum2)
+            except ValueError:
+                pass
+
+            # Max test
+            try:
+                maximum1 = float(column1.maximum)
+                maximum2 = float(column2.maximum)
+                maximum_differences[column2.name] = abs(maximum1 - maximum2)
+            except ValueError:
+                pass
+
             # Average similarity
-            average_similarity = (lcs_percentage + levenshtein_percentage + data_type_matches +
-                                  continuity_percentage + numerical_percentage) / 5
+            average_similarity = lcs_percentage + levenshtein_percentage + data_type_matches + \
+                                 continuity_percentage + numerical_percentage
 
             scores[column2.name] = average_similarity
+            no_of_tests[column2.name] = 5
+
+        # Normalize the average differences
+        normalized_average_differences = DataFrameMatcher.normalize_values(average_differences)
+        for name, similarity in normalized_average_differences.items():
+            scores[name] += similarity
+            no_of_tests[name] += 1
+
+        # Normalize the minimum differences
+        normalized_minimum_differences = DataFrameMatcher.normalize_values(minimum_differences)
+        for name, similarity in normalized_minimum_differences.items():
+            scores[name] += similarity
+            no_of_tests[name] += 1
+
+        # Normalize the maximum differences
+        normalized_maximum_differences = DataFrameMatcher.normalize_values(maximum_differences)
+        for name, similarity in normalized_maximum_differences.items():
+            scores[name] += similarity
+            no_of_tests[name] += 1
+
+        for column2 in metadata2.columns:
+            scores[column2.name] /= no_of_tests[column2.name]
 
         best_similarity = 0
         best_name = ''
@@ -124,6 +171,22 @@ class DataFrameMatcher:
                 best_name = name
 
         return best_name, best_similarity
+
+    @staticmethod
+    def normalize_values(dictionary: dict):
+        normalized_dictionary = {}
+        min_value = numpy.inf
+        max_value = 0
+        for index, value in dictionary.items():
+            if value < min_value:
+                min_value = value
+            if value > max_value:
+                max_value = value
+
+        for index, value in dictionary.items():
+            normalized_dictionary[index] = (1 - (value - min_value) / (max_value - min_value)) * 100
+
+        return normalized_dictionary
 
     @staticmethod
     def match_data_identical_values(column_a, column_b):
