@@ -14,9 +14,11 @@ from difflib import SequenceMatcher
 from Levenshtein import ratio
 from nltk.corpus import wordnet
 from itertools import product
-from statsmodels.tsa.stattools import adfuller
 from dtaidistance import dtw
 import scipy.stats as stats
+
+from discovery.utils.metadata import metadata
+from discovery.utils.metadata.metadata import Metadata, NumericColMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -25,76 +27,18 @@ class DataFrameMatcher:
     def __init__(self, methods):
         self.methods = methods
 
-    def match_dataframes(self, df_a: pandas.DataFrame, df_b: pandas.DataFrame):
-        """
-        Returns all pairs of columns from dataframes A and B with their confidence percentages based on the column
-        names, and on the column contents.
-        :return:
-        """
-
-        similarities = []
-
-        for column_a in df_a.columns:
-            for column_b in df_b.columns:
-                results = []
-                for method in self.methods:
-                    if method.__name__.startswith('match_data_'):
-                        method_confidence = method(df_a.loc[:, column_a], df_b.loc[:, column_b])
-                    else:
-                        method_confidence = method(column_a, column_b)
-
-                    result = {
-                        'name': method.__name__,
-                        'confidence': method_confidence,
-                    }
-                    results.append(result)
-
-                similarity = {
-                    'column_a': column_a,
-                    'column_b': column_b,
-                    'results': results,
-                }
-                logger.debug(similarity)
-                similarities.append(similarity)
-
-        return similarities
-
     @staticmethod
-    def numerify_column(series):
+    def match_dataframes(self,
+                         metadatum1: Metadata, df1: pandas.DataFrame,
+                         metadatum2: Metadata, df2: pandas.DataFrame):
         """
-        Transform all values in a column to a numeric data type. Values that can't be transformed will be removed
-        :param series:
+        Returns the best column match in df2 for each column in df1 with scored and confidence percentages
         :return:
         """
-        return pandas.to_numeric(series, 'coerce').dropna()
 
-    @staticmethod
-    def column_numeric_percentage(series):
-        """
-        Determine the percentage of numeric values in a column
-        :param series:
-        :return:
-        """
-        return len(DataFrameMatcher.numerify_column(series)) / len(series)
+        results = []
 
-    @staticmethod
-    def is_column_stationary(series):
-        """
-        Checks if the data in a column is stationary using the Dickey-Fuller test
-        :param series:
-        :return:
-        """
-        result = adfuller(series)
-        return result[0] < result[4]['5%']
-
-    @staticmethod
-    def column_is_continuous_probability(series):
-        """
-        Checks if the data in a column is continuous or categorical
-        :param series:
-        :return:
-        """
-        return series.nunique() / series.count()
+        return results
 
     @staticmethod
     def match_columns(dataframe1, column1_name, dataframe2, column2_name):
@@ -123,11 +67,11 @@ class DataFrameMatcher:
         no_of_methods_used += 1
 
         # Match by numerical algorithms
-        numerified_series1 = DataFrameMatcher.numerify_column(series1)
-        numerified_series2 = DataFrameMatcher.numerify_column(series2)
+        numerified_series1 = metadata.numerify_column(series1)
+        numerified_series2 = metadata.numerify_column(series2)
 
-        if DataFrameMatcher.column_numeric_percentage(series1) > 0.05 and \
-                DataFrameMatcher.column_numeric_percentage(series2) > 0.05:
+        if metadata.column_numeric_percentage(series1) > 0.05 and \
+                metadata.column_numeric_percentage(series2) > 0.05:
             similarity += DataFrameMatcher.match_data_pearson_coefficient(numerified_series1, numerified_series2)
             # similarity += DataFrameMatcher.match_data_dynamic_time_warping(numerified_series1, numerified_series2)
             # similarity += DataFrameMatcher.match_data_two_sample_t_test(numerified_series1, numerified_series2)
@@ -136,6 +80,50 @@ class DataFrameMatcher:
         # print(f"{column1_name} {column2_name} {similarity / no_of_methods_used}")
 
         return similarity / no_of_methods_used
+
+    @staticmethod
+    def match_column_in_dataframe(df1: pandas.DataFrame, column1: NumericColMetadata,
+                                  metadata2: Metadata, df2: pandas.DataFrame):
+        """
+        Find the best match of a column in another dataframe
+        :param df1:
+        :param column1:
+        :param metadata2:
+        :param df2:
+        :return:
+        """
+        scores = {}
+        for column2 in metadata2.columns:
+            # LCS name test
+            lcs_percentage = DataFrameMatcher.match_name_lcs(column1.name, column2.name)
+
+            # Levenshtein name test
+            levenshtein_percentage = DataFrameMatcher.match_name_levenshtein(column1.name, column2.name)
+
+            # Data type test
+            data_type_matches = 100 if column1.col_type == column2.col_type else 0
+
+            # Continuity test
+            continuity_percentage = 100 * (1 - abs(column1.continuity - column2.continuity))
+
+            # Numerical values test
+            numerical_percentage = 100 * (1 - abs(column1.is_numeric_percentage -
+                                                  column2.is_numeric_percentage))
+
+            # Average similarity
+            average_similarity = (lcs_percentage + levenshtein_percentage + data_type_matches +
+                                  continuity_percentage + numerical_percentage) / 5
+
+            scores[column2.name] = average_similarity
+
+        best_similarity = 0
+        best_name = ''
+        for name, similarity in scores.items():
+            if similarity > best_similarity:
+                best_similarity = similarity
+                best_name = name
+
+        return best_name, best_similarity
 
     @staticmethod
     def match_data_identical_values(column_a, column_b):

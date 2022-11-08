@@ -101,7 +101,8 @@ class Visualizer:
                         'NA' if column.stationarity is None else ('Yes' if column.stationarity == 1 else 'No'))
 
             for relationship in column.relationships:
-                col_rows += '<TD>' + str(round(relationship.certainty, 2)) + '%</TD>'
+                col_rows += '<TD>' + relationship.target_column_name + ' ' + \
+                            str(round(relationship.certainty, 2)) + '%</TD>'
             col_rows += '</TR>'
         return col_rows
 
@@ -124,7 +125,7 @@ class Visualizer:
                 '''
 
         for relationship in metadatum.columns[0].relationships:
-            filled_table += f"<TD BGCOLOR='lightgray'>Similarity to {relationship.target_column_name}</TD>"
+            filled_table += f"<TD BGCOLOR='lightgray'>Best column match in {relationship.target_file_hash}</TD>"
 
         filled_table += f"</TR>{col_strings}</TABLE>>"
 

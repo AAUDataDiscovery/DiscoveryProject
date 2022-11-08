@@ -3,11 +3,11 @@ Data storage in memory
 """
 from typing import Union
 
-from abc import ABC, abstractmethod
-from pandas.api.types import is_numeric_dtype
+from abc import ABC
+import pandas
+from statsmodels.tsa.stattools import adfuller
 
 from discovery.utils.metadata_enums import FileSizeUnit, FileExtension
-from utils.dataframe_matcher import DataFrameMatcher
 
 
 class Relationship:
@@ -93,18 +93,55 @@ def construct_column(column):
 
 
 def get_col_statistical_values(column):
-    numerified_column = DataFrameMatcher.numerify_column(column)
+    numerified_column = numerify_column(column)
 
-    is_numeric_probability = DataFrameMatcher.column_numeric_percentage(column)
+    is_numeric_probability = column_numeric_percentage(column)
     is_numeric = is_numeric_probability > 0.05
 
     col_min = column.min()
     col_max = column.max()
 
-    continuity = DataFrameMatcher.column_is_continuous_probability(column)
+    continuity = column_is_continuous_probability(column)
 
-    stationarity = DataFrameMatcher.is_column_stationary(numerified_column) if is_numeric else None
+    stationarity = is_column_stationary(numerified_column) if is_numeric else None
 
     average = numerified_column.mean() if is_numeric else None
 
     return is_numeric_probability, average, col_min, col_max, continuity, stationarity
+
+
+def numerify_column(series):
+    """
+    Transform all values in a column to a numeric data type. Values that can't be transformed will be removed
+    :param series:
+    :return:
+    """
+    return pandas.to_numeric(series, 'coerce').dropna()
+
+
+def column_numeric_percentage(series):
+    """
+    Determine the percentage of numeric values in a column
+    :param series:
+    :return:
+    """
+    return len(numerify_column(series)) / len(series)
+
+
+def is_column_stationary(series):
+    """
+    Checks if the data in a column is stationary using the Dickey-Fuller test
+    :param series:
+    :return:
+    """
+    result = adfuller(series)
+    return result[0] < result[4]['5%']
+
+
+def column_is_continuous_probability(series):
+    """
+    Checks if the data in a column is continuous or categorical
+    :param series:
+    :return:
+    """
+    return series.nunique() / series.count()
