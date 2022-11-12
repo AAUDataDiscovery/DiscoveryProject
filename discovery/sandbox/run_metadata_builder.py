@@ -14,26 +14,23 @@ if __name__ == "__main__":
 
     logger = logging.getLogger(__name__)
 
-    file_path = 'output/unsdg_2002_2021.csv'
+    file_path = 'data/world_happiness_report_2015.csv'
 
     file_handler = FileHandler()
     file_handler.load_file(file_path)
-
-    dataframe_name = file_path[file_path.rindex('/') + 1:]
-    dataframe_name = dataframe_name[:dataframe_name.rfind(".")]
 
     file_descriptor = file_handler.loaded_files[file_path]
     metadatum = construct_metadata_from_file_descriptor(file_descriptor)
 
     dataframe = file_descriptor['dataframe']
     file_hash = file_descriptor['file_hash']
-    for i in range(len(metadatum.columns)):
-        for column_name in dataframe.columns:
-            column = dataframe.loc[:, column_name]
-            metadatum.columns[i].add_relationship(
-                DataFrameMatcher.match_columns(dataframe, metadatum.columns[i].name, dataframe, column_name),
-                file_hash,
-                column_name)
+    # for i in range(len(metadatum.columns)):
+    #     for column_name in dataframe.columns:
+    #         column = dataframe.loc[:, column_name]
+    #         metadatum.columns[i].add_relationship(
+    #             DataFrameMatcher.match_columns(dataframe, metadatum.columns[i].name, dataframe, column_name),
+    #             file_hash,
+    #             column_name)
 
     write_metadata_to_json(metadatum)
 

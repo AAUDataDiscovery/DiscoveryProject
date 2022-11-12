@@ -68,10 +68,13 @@ class FileHandler:
 def construct_file_descriptor(file_path: str, extension: FileExtension, dataframe: pandas.DataFrame):
     size = os.stat(file_path).st_size
     file_hash = FileHandler.get_dataframe_hash(dataframe)
+    dataframe_name = file_path[file_path.rindex('/') + 1:]
+    dataframe_name = dataframe_name[:dataframe_name.rfind(".")]
     return {
         "file_path": file_path,
         "extension": extension,
         "dataframe": dataframe,
         "size": (size, FileSizeUnit.BYTE),
-        "file_hash": file_hash
+        "file_hash": file_hash,
+        "dataframe_name": dataframe_name
     }

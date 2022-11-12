@@ -111,7 +111,13 @@ class Visualizer:
         filled_table = f'''<
             <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
               <TR>
-                <TD COLSPAN="2" BGCOLOR="darkgrey">{metadatum.file_path}</TD>
+                <TD COLSPAN="8" BGCOLOR="darkgrey">{metadatum.file_path}</TD>
+              </TR>
+              <TR>
+                <TD COLSPAN="8" BGCOLOR="darkgrey">{metadatum.no_of_rows} rows</TD>
+              </TR>
+              <TR>
+                <TD COLSPAN="8" BGCOLOR="darkgrey">Tags: {', '.join(metadatum.tags)}</TD>
               </TR>
               <TR>
                 <TD BGCOLOR="lightgray">Name</TD>

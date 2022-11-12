@@ -9,6 +9,22 @@ from statsmodels.tsa.stattools import adfuller
 
 from discovery.utils.metadata_enums import FileSizeUnit, FileExtension
 
+# Manually set the tags on the existing datasets for now
+TAGS_MAP = {
+    'co2_emission_by_countries': ['health', 'weather and climate', 'environment', 'pollution'],
+    'unsdg_2002_2021': ['economics', 'government'],
+    'world_happiness_report_2015': ['arts and entertainment', 'news', 'social science',
+                                    'religion and belief systems', 'economics'],
+    'world_happiness_report_2016': ['arts and entertainment', 'news', 'social science',
+                                    'religion and belief systems', 'economics'],
+    'world_happiness_report_2017': ['arts and entertainment', 'news', 'social science',
+                                    'religion and belief systems', 'economics'],
+    'world_happiness_report_2018': ['arts and entertainment', 'news', 'social science',
+                                    'religion and belief systems', 'economics'],
+    'world_happiness_report_2019': ['arts and entertainment', 'news', 'social science',
+                                    'religion and belief systems', 'economics'],
+}
+
 
 class Relationship:
     certainty: int
@@ -64,18 +80,20 @@ class CategoricalColMetadata(ColMetadata):
 
 class Metadata:
     def __init__(self, file_path: str, extension: FileExtension,
-                 size: (int, FileSizeUnit), file_hash: int,
-                 columns: [] = []):
+                 size: (int, FileSizeUnit), file_hash: int, no_of_rows: int,
+                 columns: [] = [], tags: [] = []):
         self.file_path = file_path
         self.extension = extension
         self.size = size
         self.hash = int(file_hash)
+        self.no_of_rows = no_of_rows
         self.columns = columns
+        self.tags = tags
 
 
 def construct_metadata_from_file_descriptor(file_descriptor):
     metadatum = Metadata(file_descriptor["file_path"], file_descriptor["extension"],
-                         file_descriptor["size"], file_descriptor["file_hash"])
+                         file_descriptor["size"], file_descriptor["file_hash"], file_descriptor["dataframe"].shape[0])
     col_meta = []
     dataframe = file_descriptor["dataframe"]
 
@@ -83,6 +101,7 @@ def construct_metadata_from_file_descriptor(file_descriptor):
         column_data = construct_column(dataframe[col_name])
         col_meta.append(column_data)
     metadatum.columns = col_meta
+    metadatum.tags = TAGS_MAP[file_descriptor["dataframe_name"]]
     return metadatum
 
 
