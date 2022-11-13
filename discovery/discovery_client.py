@@ -22,7 +22,7 @@ from discovery.utils.decorators.type_enforcer import type_enforcer
 from discovery.utils.dataframe_matcher import DataFrameMatcher
 from discovery.utils.file_handler import FileHandler
 from discovery.utils.decorators.persist_execution import persistence
-from discovery.utils.visualizer import Visualizer
+from utils.visualizer.graphing.visualizer import Visualizer
 
 
 class DiscoveryClient:

@@ -1,0 +1,15 @@
+<TABLE BORDER="0" CELLSPACING="0">
+      <TR>
+        <TD colspan="100%" BGCOLOR="darkgrey">{{file_table_section.filename}}</TD>
+      </TR>
+      <TR>
+        <TD BGCOLOR="lightgray">Name</TD>
+        <TD BGCOLOR="lightgray">Type</TD>
+        <TD BGCOLOR="lightgray">Average</TD>
+        <TD BGCOLOR="lightgray">Lowest</TD>
+        <TD BGCOLOR="lightgray">Highest</TD>
+      </TR>
+      {% for item in file_table_section.columns %}
+          <TR><TD>{{item.name}}</TD> <TD>{{item.col_type}}</TD> <TD>{{item.mean}}</TD> <TD>{{item.min}}</TD> <TD>{{item.max}}</TD></TR>
+      {% endfor %}
+</TABLE>

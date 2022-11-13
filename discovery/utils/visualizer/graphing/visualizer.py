@@ -82,7 +82,7 @@ class Visualizer:
 
     def _finalize_result_graph(self, output_filename):
         self.root.recursively_append_subgraphs()
-        self.root.graph.view(output_filename)
+        self.root.graph.render(output_filename, view=False, format='png')
 
     def _draw_metadatum(self, metadatum: Metadata):
         columns = self._draw_table_columns(metadatum)

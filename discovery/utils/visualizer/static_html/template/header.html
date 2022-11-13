@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{title}}</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100px;
+            background: cornflowerblue;
+        }
+        header h1 {
+            margin: 0;
+            padding: 30px;
+            color: aliceblue;
+        }
+        main {
+            margin-top: 100px;
+            margin-left: 400px;
+            padding: 20px;
+        }
+        .sidebar {
+            position: fixed;
+            top: 100px;
+            left: 0;
+            height: 100%;
+            width: 400px;
+            background: cornflowerblue;
+        }
+        .sidebar ul {
+            padding: 0;
+            list-style: none;
+        }
+        .sidebar li {
+            box-sizing: border-box;
+            padding: 5px 10px 5px 10px;
+            display: block;
+            width: 100%;
+            color: aliceblue;
+            background: deepskyblue;
+        }
+        .sidebar li:hover {
+            background: dodgerblue;
+        }
+        .sidebar li a {
+            text-decoration: none;
+            color: inherit;
+            word-wrap: break-word;
+        }
+        td {
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+{% block content %}
+    <header>
+        <h1>
+            {{ title }}
+        </h1>
+    </header>
+{% endblock %}

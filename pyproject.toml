@@ -18,6 +18,7 @@ dependencies = [
     "statsmodels>=0.13.2",
     "dtaidistance>=2.3.10",
     "setuptools>=65.5.0",
+    "jinja2>=3.1.2",
 ]
 requires-python = ">=3.10"
 license = {text = "MIT"}

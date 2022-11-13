@@ -1,0 +1,12 @@
+{% include "header.html" %}
+
+
+{% if sidebar-%}
+{% include "sidebar.html" %}
+{%- endif %}
+
+<main>
+    {% include content_file %}
+</main>
+
+{% include "footer.html" %}
