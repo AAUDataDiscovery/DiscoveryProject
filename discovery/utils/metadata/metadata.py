@@ -11,18 +11,13 @@ from discovery.utils.metadata_enums import FileSizeUnit, FileExtension
 
 # Manually set the tags on the existing datasets for now
 TAGS_MAP = {
-    'co2_emission_by_countries': ['health', 'weather and climate', 'environment', 'pollution'],
+    'diabetes': ['health'],
     'unsdg_2002_2021': ['economics', 'government'],
     'world_happiness_report_2015': ['arts and entertainment', 'news', 'social science',
                                     'religion and belief systems', 'economics'],
     'world_happiness_report_2016': ['arts and entertainment', 'news', 'social science',
                                     'religion and belief systems', 'economics'],
-    'world_happiness_report_2017': ['arts and entertainment', 'news', 'social science',
-                                    'religion and belief systems', 'economics'],
-    'world_happiness_report_2018': ['arts and entertainment', 'news', 'social science',
-                                    'religion and belief systems', 'economics'],
-    'world_happiness_report_2019': ['arts and entertainment', 'news', 'social science',
-                                    'religion and belief systems', 'economics'],
+    'world_happiness_report_2021': ['health', 'healthcare', 'religion and belief systems', 'economics'],
 }
 
 
