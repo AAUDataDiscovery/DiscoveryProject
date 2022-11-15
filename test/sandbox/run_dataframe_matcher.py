@@ -1,10 +1,9 @@
 import yaml
 import logging.config
 
-from utils.dataframe_matcher import DataFrameMatcher
+from data_matching.dataframe_matcher import DataFrameMatcher
 from utils.file_handler import FileHandler
 from discovery.utils.metadata.metadata import construct_metadata_from_file_descriptor
-from discovery.utils.metadata.metadata_json_handler import write_metadata_to_json
 from discovery.utils.visualizer import Visualizer
 
 if __name__ == "__main__":

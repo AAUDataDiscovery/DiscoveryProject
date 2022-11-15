@@ -4,7 +4,7 @@ import numpy as np
 
 from utils.file_handler import FileHandler
 from utils.datagen import FakeDataGen
-from utils.dataframe_matcher import DataFrameMatcher
+from data_matching.dataframe_matcher import DataFrameMatcher
 
 if __name__ == "__main__":
     with open('../../discovery/logging_conf.yaml', 'r') as f:

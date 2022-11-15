@@ -92,7 +92,7 @@ class Visualizer:
     # TODO: make it more generic
     def _draw_table_columns(self, metadatum):
         col_rows: str = ""
-        for column in metadatum.columns:
+        for column in metadatum.columns.values():
             col_rows += '<TR><TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD>' \
                 .format(column.name, column.col_type, str(round(column.is_numeric_percentage * 100, 2)) + '%',
                         str(round(column.continuity * 100, 2)) + '%',
@@ -130,8 +130,12 @@ class Visualizer:
                 <TD BGCOLOR="lightgray">Stationarity</TD>
                 '''
 
-        for relationship in metadatum.columns[0].relationships:
-            filled_table += f"<TD BGCOLOR='lightgray'>Best column match in {relationship.target_file_hash}</TD>"
+        for column in metadatum.columns.values():
+            if column.relationships:
+                # map the certainties to a key, multiple certainties will override each other, but we only care about one
+                certainty_map = {relationship.certainty: relationship for relationship in column.relationships}
+                highest_certainty = certainty_map[max(certainty_map)]
+                filled_table += f"<TD BGCOLOR='lightgray'>Best column match in {highest_certainty.target_file_hash}</TD>"
 
         filled_table += f"</TR>{col_strings}</TABLE>>"
 

@@ -19,7 +19,7 @@ def get_metadata_dictionary_representation(metadata: Metadata):
         "hash": normalize_and_get_hash(metadata.hash),
         "no_of_rows": metadata.no_of_rows,
         "tags": metadata.tags,
-        "columns": get_columns_dictionary_representation(metadata.columns)
+        "columns": get_columns_dictionary_representation(metadata.columns.values())
     }
     return dictionary_representation
 

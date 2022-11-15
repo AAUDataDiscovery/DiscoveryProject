@@ -1,13 +1,14 @@
 """
 Data storage in memory
 """
+from functools import partial
 from typing import Union
 
 from abc import ABC
 import pandas
 from statsmodels.tsa.stattools import adfuller
 
-from discovery.utils.metadata_enums import FileSizeUnit, FileExtension
+from utils.metadata.metadata_enums import FileSizeUnit, FileExtension
 
 # Manually set the tags on the existing datasets for now
 TAGS_MAP = {
@@ -74,9 +75,19 @@ class CategoricalColMetadata(ColMetadata):
 
 
 class Metadata:
-    def __init__(self, file_path: str, extension: FileExtension,
-                 size: (int, FileSizeUnit), file_hash: int, no_of_rows: int,
-                 columns: [] = [], tags: [] = []):
+    def __init__(
+            self,
+            file_path: str,
+            extension: FileExtension,
+            datagen: partial,
+            size: (int, FileSizeUnit),
+            file_hash: int,
+            no_of_rows: int,
+            columns: [] = None,
+            tags: [] = None
+    ):
+        columns = columns or []
+        tags = tags or []
         self.file_path = file_path
         self.extension = extension
         self.size = size
@@ -84,19 +95,27 @@ class Metadata:
         self.no_of_rows = no_of_rows
         self.columns = columns
         self.tags = tags
+        self.datagen = datagen
 
 
 def construct_metadata_from_file_descriptor(file_descriptor):
-    metadatum = Metadata(file_descriptor["file_path"], file_descriptor["extension"],
-                         file_descriptor["size"], file_descriptor["file_hash"], file_descriptor["dataframe"].shape[0])
-    col_meta = []
-    dataframe = file_descriptor["dataframe"]
+    dataframe_data = next(file_descriptor["dataframe"]())
+    metadatum = Metadata(
+        file_path=file_descriptor["file_path"],
+        extension=file_descriptor["extension"],
+        datagen=file_descriptor['dataframe'],
+        size=file_descriptor["size"],
+        file_hash=file_descriptor["file_hash"],
+        no_of_rows=dataframe_data.shape[0]
+    )
+    col_meta = {}
 
-    for col_name in dataframe.columns:
-        column_data = construct_column(dataframe[col_name])
-        col_meta.append(column_data)
+    for col_name in dataframe_data.columns:
+        column_data = construct_column(dataframe_data[col_name])
+        col_meta[col_name] = column_data
     metadatum.columns = col_meta
-    metadatum.tags = TAGS_MAP[file_descriptor["dataframe_name"]]
+    # TODO: why is this hardcoded??
+    metadatum.tags = TAGS_MAP.get(file_descriptor["dataframe_name"], [])
     return metadatum
 
 
