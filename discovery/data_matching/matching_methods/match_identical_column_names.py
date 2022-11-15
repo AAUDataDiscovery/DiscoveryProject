@@ -2,7 +2,7 @@
 The simplest possible solution to matching column data
 """
 
-from data_matching.data_match_interface import DataMatcher
+from discovery.data_matching.data_match_interface import DataMatcher
 
 
 class MatchIdenticalColumnNames(DataMatcher):

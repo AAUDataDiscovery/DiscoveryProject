@@ -3,7 +3,7 @@ Calculate a similarity percentage with set operations (intersection vs union) fo
 """
 
 import numpy
-from data_matching.data_match_interface import DataMatcher
+from discovery.data_matching.data_match_interface import DataMatcher
 
 
 class MatchIdenticalRows(DataMatcher):

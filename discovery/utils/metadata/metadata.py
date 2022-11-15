@@ -8,7 +8,7 @@ from abc import ABC
 import pandas
 from statsmodels.tsa.stattools import adfuller
 
-from utils.metadata.metadata_enums import FileSizeUnit, FileExtension
+from discovery.utils.metadata.metadata_enums import FileSizeUnit, FileExtension
 
 # Manually set the tags on the existing datasets for now
 TAGS_MAP = {

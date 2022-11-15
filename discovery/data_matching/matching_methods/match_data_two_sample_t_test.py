@@ -5,7 +5,7 @@ Determine if the unknown population means of the two groups are equal
 import numpy as np
 import scipy.stats as stats
 
-from data_matching.data_match_interface import DataMatcher
+from discovery.data_matching.data_match_interface import DataMatcher
 
 
 class MatchDataTwoSampleTTest(DataMatcher):

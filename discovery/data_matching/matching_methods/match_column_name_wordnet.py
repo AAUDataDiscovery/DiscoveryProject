@@ -5,7 +5,7 @@ Calculate the similarity of 2 column names using WordNet
 from nltk.corpus import wordnet
 from itertools import product
 
-from data_matching.data_match_interface import DataMatcher
+from discovery.data_matching.data_match_interface import DataMatcher
 
 
 class MatchColumnNamesWordnet(DataMatcher):

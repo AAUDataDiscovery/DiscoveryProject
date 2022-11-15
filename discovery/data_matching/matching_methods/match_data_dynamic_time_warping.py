@@ -4,7 +4,7 @@ Calculate the normalized distance measure between two numerical columns using Dy
 
 from dtaidistance import dtw
 import pandas as pd
-from data_matching.data_match_interface import DataMatcher
+from discovery.data_matching.data_match_interface import DataMatcher
 
 
 class MatchDataDynamicTimeWarping(DataMatcher):

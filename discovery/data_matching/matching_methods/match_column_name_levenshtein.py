@@ -4,7 +4,7 @@ Calculate the similarity of 2 column names using the Levenshtein distance
 
 from Levenshtein import ratio
 
-from data_matching.data_match_interface import DataMatcher
+from discovery.data_matching.data_match_interface import DataMatcher
 
 
 class MatchColumnNamesLevenshtein(DataMatcher):

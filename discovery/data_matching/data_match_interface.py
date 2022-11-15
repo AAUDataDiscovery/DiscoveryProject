@@ -7,7 +7,7 @@ TODO:
     add decorators for enforcing int values
 """
 import pandas as pd
-from utils.metadata.metadata import ColMetadata, Metadata
+from discovery.utils.metadata.metadata import ColMetadata, Metadata
 
 
 class DataMatcher:

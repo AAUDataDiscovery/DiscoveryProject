@@ -9,7 +9,7 @@ import logging
 from pandas.util import hash_pandas_object
 
 from discovery.utils.custom_exceptions import UnsupportedFileExtension, FileNotFoundError
-from utils.metadata.metadata_enums import FileExtension, FileSizeUnit
+from discovery.utils.metadata.metadata_enums import FileExtension, FileSizeUnit
 from discovery.utils.metadata.metadata import construct_metadata_from_file_descriptor
 
 logger = logging.getLogger(__name__)

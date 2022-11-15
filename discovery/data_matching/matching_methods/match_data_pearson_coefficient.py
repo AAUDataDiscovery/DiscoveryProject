@@ -3,7 +3,7 @@ Calculate the Pearson correlation coefficient between the 2 columns if they are 
 """
 
 
-from data_matching.data_match_interface import DataMatcher
+from discovery.data_matching.data_match_interface import DataMatcher
 
 
 class MatchDataPearsonCoefficient(DataMatcher):
