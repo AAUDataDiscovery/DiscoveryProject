@@ -7,7 +7,8 @@ from discovery.utils.metadata.metadata_json_handler import write_metadata_to_jso
 from discovery.utils.visualizer import Visualizer
 from discovery.utils.metadata.metadata import add_tags_to_metadata
 from discovery import DiscoveryClient
-from test.sandbox.tags_map import TAGS_MAP
+from test.sandbox.setup import DATASETS
+from test.sandbox.setup import download_datasets
 
 if __name__ == "__main__":
     """
@@ -20,7 +21,10 @@ if __name__ == "__main__":
 
     logger = logging.getLogger(__name__)
 
-    test_file_path = 'data/world_happiness_report_2021.csv'
+    download_datasets()
+    exit()
+
+    test_file_path = 'data/world-happiness-report-2021.csv'
 
     discovery_client = DiscoveryClient({})
     discovery_client.load_file(test_file_path)
@@ -39,7 +43,7 @@ if __name__ == "__main__":
             'metadata': discovery_client.loaded_metadata[file_path],
             'dataframe': next(discovery_client.loaded_metadata[file_path].datagen())
         }
-        add_tags_to_metadata(catalogue_item['metadata'], TAGS_MAP[filename])
+        add_tags_to_metadata(catalogue_item['metadata'], DATASETS[filename]['tags'])
         catalogue.append(catalogue_item)
 
     tags = {}
