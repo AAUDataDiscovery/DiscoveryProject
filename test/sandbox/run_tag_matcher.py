@@ -3,11 +3,11 @@ import logging.config
 import os
 
 from discovery.data_matching.matching_methods import MatchColumnNamesLevenshtein
-from discovery.utils.file_handler import FileHandler
-from discovery.utils.metadata.metadata import construct_metadata_from_file_descriptor
 from discovery.utils.metadata.metadata_json_handler import write_metadata_to_json
 from discovery.utils.visualizer import Visualizer
+from discovery.utils.metadata.metadata import add_tags_to_metadata
 from discovery import DiscoveryClient
+from test.sandbox.tags_map import TAGS_MAP
 
 if __name__ == "__main__":
     """
@@ -35,10 +35,12 @@ if __name__ == "__main__":
         if test_file_path == file_path:
             continue
         discovery_client.load_file(file_path)
-        catalogue.append({
+        catalogue_item = {
             'metadata': discovery_client.loaded_metadata[file_path],
             'dataframe': next(discovery_client.loaded_metadata[file_path].datagen())
-        })
+        }
+        add_tags_to_metadata(catalogue_item['metadata'], TAGS_MAP[filename])
+        catalogue.append(catalogue_item)
 
     tags = {}
 
@@ -76,3 +78,6 @@ if __name__ == "__main__":
             print('\t' + name + ' ' + str(percentage))
 
     tags = dict(sorted(tags.items(), key=lambda item: item[1], reverse=True))
+    print()
+    print()
+    print(tags)

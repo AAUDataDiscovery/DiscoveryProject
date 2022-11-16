@@ -10,17 +10,6 @@ from statsmodels.tsa.stattools import adfuller
 
 from discovery.utils.metadata.metadata_enums import FileSizeUnit, FileExtension
 
-# Manually set the tags on the existing datasets for now
-TAGS_MAP = {
-    'diabetes': ['health'],
-    'unsdg_2002_2021': ['economics', 'government'],
-    'world_happiness_report_2015': ['arts and entertainment', 'news', 'social science',
-                                    'religion and belief systems', 'economics'],
-    'world_happiness_report_2016': ['arts and entertainment', 'news', 'social science',
-                                    'religion and belief systems', 'economics'],
-    'world_happiness_report_2021': ['health', 'healthcare', 'religion and belief systems', 'economics'],
-}
-
 
 class Relationship:
     certainty: int
@@ -114,9 +103,12 @@ def construct_metadata_from_file_descriptor(file_descriptor):
         column_data = construct_column(dataframe_data[col_name])
         col_meta[col_name] = column_data
     metadatum.columns = col_meta
-    # TODO: why is this hardcoded??
-    metadatum.tags = TAGS_MAP.get(file_descriptor["dataframe_name"], [])
     return metadatum
+
+
+def add_tags_to_metadata(metadata: Metadata, tags: []):
+    metadata.tags += tags
+    return metadata
 
 
 def construct_column(column):
