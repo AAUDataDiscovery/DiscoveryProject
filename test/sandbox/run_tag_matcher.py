@@ -2,11 +2,12 @@ import yaml
 import logging.config
 import os
 
-from utils.dataframe_matcher import DataFrameMatcher
-from utils.file_handler import FileHandler
+from discovery.data_matching.matching_methods import MatchColumnNamesLevenshtein
+from discovery.utils.file_handler import FileHandler
 from discovery.utils.metadata.metadata import construct_metadata_from_file_descriptor
 from discovery.utils.metadata.metadata_json_handler import write_metadata_to_json
 from discovery.utils.visualizer import Visualizer
+from discovery import DiscoveryClient
 
 if __name__ == "__main__":
     """
@@ -21,47 +22,46 @@ if __name__ == "__main__":
 
     test_file_path = 'data/world_happiness_report_2021.csv'
 
-    file_handler = FileHandler()
-    file_handler.load_file(test_file_path)
+    discovery_client = DiscoveryClient({})
+    discovery_client.load_file(test_file_path)
 
-    test_file_descriptor = file_handler.loaded_files[test_file_path]
-    test_metadata = construct_metadata_from_file_descriptor(test_file_descriptor)
-    test_dataframe = test_file_descriptor['dataframe']
-    test_file_hash = test_file_descriptor['file_hash']
+    test_metadata = discovery_client.loaded_metadata[test_file_path]
+    test_dataframe = next(test_metadata.datagen())
 
     catalogue = []
 
     for filename in os.listdir('data'):
-        if test_file_path == 'data/' + filename:
+        file_path = 'data/' + filename
+        if test_file_path == file_path:
             continue
-        file_handler.load_file('data/' + filename)
-        file_descriptor = file_handler.loaded_files['data/' + filename]
+        discovery_client.load_file(file_path)
         catalogue.append({
-            'metadata': construct_metadata_from_file_descriptor(file_descriptor),
-            'dataframe': file_descriptor['dataframe']
+            'metadata': discovery_client.loaded_metadata[file_path],
+            'dataframe': next(discovery_client.loaded_metadata[file_path].datagen())
         })
 
     tags = {}
 
-    for i in range(len(test_metadata.columns)):
+    for test_column_name, test_column in test_metadata.columns.items():
         columns = {}
 
         for item in catalogue:
-            for j in range(len(item['metadata'].columns)):
-                levenshtein_percentage = DataFrameMatcher.match_name_levenshtein(test_metadata.columns[i].name,
-                                                                                 item['metadata'].columns[j].name)
-                data_type_percentage = 100 if test_metadata.columns[i].col_type == item['metadata'].columns[
-                    j].col_type else 0
+            for column_name, column in item['metadata'].columns.items():
+                levenshtein_matcher = MatchColumnNamesLevenshtein()
+                levenshtein_percentage = \
+                    levenshtein_matcher.run_process(test_column, column)
+
+                data_type_percentage = 100 if test_column.col_type == column.col_type else 0
 
                 continuity_percentage = 100 * (
-                        1 - abs(test_metadata.columns[i].continuity - item['metadata'].columns[j].continuity))
+                        1 - abs(test_column.continuity - column.continuity))
 
-                numerical_percentage = 100 * (1 - abs(test_metadata.columns[i].is_numeric_percentage -
-                                                      item['metadata'].columns[j].is_numeric_percentage))
+                numerical_percentage = 100 * (1 - abs(test_column.is_numeric_percentage -
+                                                      column.is_numeric_percentage))
 
                 match_percentage = (levenshtein_percentage + continuity_percentage + numerical_percentage) / 3
 
-                columns[item['metadata'].columns[j].name] = match_percentage
+                columns[column.name] = match_percentage
 
                 for tag in item['metadata'].tags:
                     if tag not in tags:
@@ -70,7 +70,7 @@ if __name__ == "__main__":
 
         columns = dict(sorted(columns.items(), key=lambda item: item[1], reverse=True))
 
-        print(test_metadata.columns[i].name + ':')
+        print(test_column.name + ':')
 
         for name, percentage in columns.items():
             print('\t' + name + ' ' + str(percentage))
