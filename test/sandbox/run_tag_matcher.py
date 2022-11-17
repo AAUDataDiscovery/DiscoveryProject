@@ -3,6 +3,7 @@ import logging.config
 import os
 
 from discovery.data_matching.matching_methods import MatchColumnNamesLevenshtein
+from discovery.data_matching.matching_methods import MatchIdenticalRows
 from discovery.utils.metadata.metadata_json_handler import write_metadata_to_json
 from discovery.utils.visualizer import Visualizer
 from discovery.utils.metadata.metadata import add_tags_to_metadata
@@ -22,7 +23,6 @@ if __name__ == "__main__":
     logger = logging.getLogger(__name__)
 
     download_datasets()
-    exit()
 
     test_file_path = 'data/world-happiness-report-2021.csv'
 
@@ -65,7 +65,11 @@ if __name__ == "__main__":
                 numerical_percentage = 100 * (1 - abs(test_column.is_numeric_percentage -
                                                       column.is_numeric_percentage))
 
-                match_percentage = (levenshtein_percentage + continuity_percentage + numerical_percentage) / 3
+                unique_values_percentage = MatchIdenticalRows().run_process(test_dataframe.loc[:, test_column_name],
+                                                                            item['dataframe'].loc[:, column_name])
+
+                match_percentage = (levenshtein_percentage + continuity_percentage + numerical_percentage +
+                                    unique_values_percentage) / 4
 
                 columns[column.name] = match_percentage
 
