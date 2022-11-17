@@ -36,7 +36,7 @@ class FileHandler:
         """
         for root, dirs, files in os.walk(file_path):
             for filename in files:
-                if any([filename.endswith(extension) for extension in self.supported_extensions]):
+                if any([filename.endswith(extension.value) for extension in self.supported_extensions]):
                     self.load_file(os.path.join(root, filename))
 
     def load_file(self, file_path, partition_size=None):

@@ -2,6 +2,7 @@
 Takes two dataframes and tries to match them column by column
 """
 import logging
+from typing import Type
 
 # TODO: currently not working out of the box, must be run with the following statements...
 # >>> import nltk
@@ -19,7 +20,7 @@ logger = logging.getLogger(__name__)
 class DataFrameMatcher:
     @staticmethod
     def match_columns(
-            methods: list[DataMatcher],
+            methods: list[Type[DataMatcher]],
             col_meta1: ColMetadata,
             col_meta2: ColMetadata,
             series1: pd.Series = None,
