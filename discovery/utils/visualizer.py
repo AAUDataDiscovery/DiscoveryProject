@@ -108,16 +108,22 @@ class Visualizer:
 
     # TODO: find a more generic approach
     def _draw_filled_metadatum_table(self, metadatum, col_strings: str):
+        filled_table_column_no = 8
+        for column in metadatum.columns.values():
+            for relationship in column.relationships:
+                filled_table_column_no += 1
+            break
+
         filled_table = f'''<
             <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
               <TR>
-                <TD COLSPAN="8" BGCOLOR="darkgrey">{metadatum.file_path}</TD>
+                <TD COLSPAN="{filled_table_column_no}" BGCOLOR="darkgrey">{metadatum.file_path}</TD>
               </TR>
               <TR>
-                <TD COLSPAN="8" BGCOLOR="darkgrey">{metadatum.no_of_rows} rows</TD>
+                <TD COLSPAN="{filled_table_column_no}" BGCOLOR="darkgrey">{metadatum.no_of_rows} rows</TD>
               </TR>
               <TR>
-                <TD COLSPAN="8" BGCOLOR="darkgrey">Tags: {', '.join(metadatum.tags)}</TD>
+                <TD COLSPAN="{filled_table_column_no}" BGCOLOR="darkgrey">Tags: {', '.join(metadatum.tags)}</TD>
               </TR>
               <TR>
                 <TD BGCOLOR="lightgray">Name</TD>
@@ -131,11 +137,9 @@ class Visualizer:
                 '''
 
         for column in metadatum.columns.values():
-            if column.relationships:
-                # map the certainties to a key, multiple certainties will override each other, but we only care about one
-                certainty_map = {relationship.certainty: relationship for relationship in column.relationships}
-                highest_certainty = certainty_map[max(certainty_map)]
-                filled_table += f"<TD BGCOLOR='lightgray'>Best column match in {highest_certainty.target_file_hash}</TD>"
+            for relationship in column.relationships:
+                filled_table += f"<TD BGCOLOR='lightgray'>Best column match in {relationship.target_file_hash}</TD>"
+            break
 
         filled_table += f"</TR>{col_strings}</TABLE>>"
 
