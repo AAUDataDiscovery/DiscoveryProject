@@ -58,19 +58,19 @@ class DataFrameMatcher:
                 })
                 # update the similarity reference with applied method and weight
                 similarity_ref.update({method_instance.name: (similarity, filled_weights[index])})
-                # apply the weight, which is 1 if the list index is out of range
-                overall_similarity += similarity * (filled_weights[index] if weights[index:] else 1)
+                overall_similarity += similarity * filled_weights[index]
 
             except Exception as exc:
-                logger.error(f"Something unexpected went wrong running method {method.__class__}, skipping...")
+                logger.error(f"Something unexpected went wrong running method {method.__qualname__}, skipping...")
                 logger.error(exc)
                 # something went wrong, invalidate the method and ensure the weight is correct
-                weights[index] = 0
+                filled_weights[index] = 0
 
-            overall_similarity = overall_similarity / sum(filled_weights)
-            logger.debug("Matching complete")
+        # get the average similarity, if overall_similarity is zero then something probably went wrong, set to zero
+        average_similarity = (overall_similarity / sum(filled_weights)) if overall_similarity else 0
+        logger.debug("Matching complete")
 
-            return similarity_ref, overall_similarity
+        return similarity_ref, average_similarity
 
     @staticmethod
     def match_column_in_dataframe(df1: pd.DataFrame, column1: NumericColMetadata,
