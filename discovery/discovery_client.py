@@ -75,7 +75,8 @@ class DiscoveryClient:
 
     @type_enforcer
     def load_files(self, path: str):
-        self.file_handler.scan_filesystem(path)
+        for metadata_object in self.file_handler.scan_filesystem(path):
+            self.loaded_metadata[metadata_object.file_path] = metadata_object
 
     @persistence
     @type_enforcer
