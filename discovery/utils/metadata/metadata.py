@@ -73,10 +73,12 @@ class Metadata:
             file_hash: int,
             no_of_rows: int,
             columns: [] = None,
-            tags: [] = None
+            tags: [] = None,
+            possible_tags: {} = None
     ):
         columns = columns or []
         tags = tags or []
+        possible_tags = possible_tags or {}
         self.file_path = file_path
         self.extension = extension
         self.size = size
@@ -84,6 +86,7 @@ class Metadata:
         self.no_of_rows = no_of_rows
         self.columns = columns
         self.tags = tags
+        self.possible_tags = possible_tags
         self.datagen = datagen
 
 
@@ -108,6 +111,11 @@ def construct_metadata_from_file_descriptor(file_descriptor):
 
 def add_tags_to_metadata(metadata: Metadata, tags: []):
     metadata.tags += tags
+    return metadata
+
+
+def add_possible_tags_to_metadata(metadata: Metadata, possible_tags: {}):
+    metadata.possible_tags.update(possible_tags)
     return metadata
 
 

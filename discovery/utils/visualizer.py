@@ -126,6 +126,9 @@ class Visualizer:
                 <TD COLSPAN="{filled_table_column_no}" BGCOLOR="darkgrey">Tags: {', '.join(metadatum.tags)}</TD>
               </TR>
               <TR>
+                <TD COLSPAN="{filled_table_column_no}" BGCOLOR="darkgrey">Possible tags: {Visualizer._print_possible_tags(metadatum.possible_tags)}</TD> 
+              </TR>
+              <TR>
                 <TD BGCOLOR="lightgray">Name</TD>
                 <TD BGCOLOR="lightgray">Type</TD>
                 <TD BGCOLOR="lightgray">Numeric</TD>
@@ -172,3 +175,10 @@ class Visualizer:
     def _get_node_if_path_was_already_observed(self, filesystem_full_path: str):
         return next(iter([node for node in self.observed_nodes if node.filesystem_full_path == filesystem_full_path]),
                     None)
+
+    @staticmethod
+    def _print_possible_tags(possible_tags: {}):
+        result = ""
+        for tag_name, normalized_tag_score in possible_tags.items():
+            result += f"{tag_name} ({round(normalized_tag_score * 100, 2)}%), "
+        return result[:-2]
