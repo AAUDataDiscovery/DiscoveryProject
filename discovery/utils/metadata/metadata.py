@@ -131,8 +131,12 @@ def get_col_statistical_values(column):
     is_numeric_probability = column_numeric_percentage(column)
     is_numeric = is_numeric_probability > 0.05
 
-    col_min = column.min()
-    col_max = column.max()
+    try:
+        col_min = column.min()
+        col_max = column.max()
+    except TypeError:
+        col_min = column.astype("string").min()
+        col_max = column.astype("string").max()
 
     continuity = column_is_continuous_probability(column)
 

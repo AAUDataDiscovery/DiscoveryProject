@@ -26,14 +26,14 @@ if __name__ == "__main__":
 
     download_datasets()
 
-    test_file_path = 'data/world-happiness-report-2021.csv'
+    test_file_path = 'data/diabetes.csv'
 
     discovery_client = DiscoveryClient({})
     discovery_client.load_file(test_file_path)
 
     test_metadata = discovery_client.loaded_metadata[test_file_path]
     test_dataframe = next(test_metadata.datagen())
-    add_tags_to_metadata(test_metadata, DATASETS['world-happiness-report-2021.csv']['tags'])
+    add_tags_to_metadata(test_metadata, DATASETS['diabetes.csv']['tags'])
 
     catalogue = []
 
