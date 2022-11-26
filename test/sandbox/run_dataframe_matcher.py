@@ -12,8 +12,8 @@ if __name__ == "__main__":
 
     logger = logging.getLogger(__name__)
 
-    file1_path = 'data/2015.csv'
-    file2_path = 'data/2016.csv'
+    file1_path = 'data/DailyDelhiClimateTrain.csv'
+    file2_path = 'data/seattle-weather.csv'
 
     discovery_client = DiscoveryClient({})
     discovery_client.load_file(file1_path)
@@ -39,4 +39,4 @@ if __name__ == "__main__":
     # write_metadata_to_json(metadata2)
 
     visualizer = Visualizer()
-    visualizer.draw([metadata1, metadata2], 'output/run_dataframe_matcher')
+    visualizer.draw([metadata1, metadata2], 'output/DailyDelhiClimateTrain-seattle-weather-dataframe_matcher')

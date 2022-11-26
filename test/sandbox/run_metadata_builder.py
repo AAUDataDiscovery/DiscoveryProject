@@ -1,10 +1,11 @@
 import yaml
 import logging.config
 
-from utils.file_handler import FileHandler
-from discovery.utils.metadata.metadata import construct_metadata_from_file_descriptor
-from discovery.utils.metadata.metadata_json_handler import write_metadata_to_json
 from discovery.utils.visualizer import Visualizer
+from discovery import DiscoveryClient
+from discovery.utils.metadata.metadata import add_tags_to_metadata
+from test.sandbox.setup import DATASETS
+from test.sandbox.setup import download_datasets
 
 if __name__ == "__main__":
     with open('../../discovery/logging_conf.yaml', 'r') as f:
@@ -13,25 +14,18 @@ if __name__ == "__main__":
 
     logger = logging.getLogger(__name__)
 
-    file_path = 'data/world_happiness_report_2015.csv'
+    download_datasets()
 
-    file_handler = FileHandler()
-    file_handler.load_file(file_path)
+    file_path = 'data/seattle-weather.csv'
 
-    file_descriptor = file_handler.loaded_files[file_path]
-    metadatum = construct_metadata_from_file_descriptor(file_descriptor)
+    discovery_client = DiscoveryClient({})
+    discovery_client.load_file(file_path)
 
-    dataframe = file_descriptor['dataframe']
-    file_hash = file_descriptor['file_hash']
-    # for i in range(len(metadatum.columns)):
-    #     for column_name in dataframe.columns:
-    #         column = dataframe.loc[:, column_name]
-    #         metadatum.columns[i].add_relationship(
-    #             DataFrameMatcher.match_columns(dataframe, metadatum.columns[i].name, dataframe, column_name),
-    #             file_hash,
-    #             column_name)
+    metadata = discovery_client.loaded_metadata[file_path]
+    dataframe = next(metadata.datagen())
+    add_tags_to_metadata(metadata, DATASETS['seattle-weather.csv']['tags'])
 
-    write_metadata_to_json(metadatum)
+    # write_metadata_to_json(metadata)
 
     visualizer = Visualizer()
-    visualizer.draw([metadatum], 'output/run_metadata_builder')
+    visualizer.draw([metadata], 'output/seattle-weather-metadata')

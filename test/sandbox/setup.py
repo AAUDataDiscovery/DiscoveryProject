@@ -56,6 +56,14 @@ DATASETS = {
     'coffee-listings-from-all-walmart-stores.csv': {
         'path': 'dimitryzub/walmart-coffee-listings-from-500-stores',
         'tags': ['food']
+    },
+    'DailyDelhiClimateTrain.csv': {
+        'path': 'sumanthvrao/daily-climate-time-series-data',
+        'tags': ['weather and climate']
+    },
+    'seattle-weather.csv': {
+        'path': 'ananthr1/weather-prediction',
+        'tags': ['weather and climate']
     }
 }
 
