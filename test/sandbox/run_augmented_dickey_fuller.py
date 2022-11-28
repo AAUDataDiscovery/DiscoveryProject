@@ -22,7 +22,7 @@ if __name__ == "__main__":
                                             continuous_data=1, categoric_data=0, file_spread=1)
     file_handler.load_file(fake_files[0])
 
-    df = file_handler.loaded_files[fake_files[0]]
+    df = file_handler.loaded_files[fake_files[0]]['dataframe']
 
     for column in df.columns:
         series = df.loc[:, column]

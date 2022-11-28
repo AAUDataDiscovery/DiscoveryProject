@@ -17,7 +17,9 @@ def get_metadata_dictionary_representation(metadata: Metadata):
         "extension": normalize_and_get_extension(metadata.extension),
         "size": normalize_and_get_size(metadata.size),
         "hash": normalize_and_get_hash(metadata.hash),
-        "columns": get_columns_dictionary_representation(metadata.columns)
+        "no_of_rows": metadata.no_of_rows,
+        "tags": metadata.tags,
+        "columns": get_columns_dictionary_representation(metadata.columns.values())
     }
     return dictionary_representation
 
@@ -27,9 +29,12 @@ def get_columns_dictionary_representation(columns: [ColMetadata]):
     for column in columns:
         column_dict = {
             "name": normalize_and_get_column_name(column.name),
+            "is_numeric_percentage": column.is_numeric_percentage,
+            "continuity": column.continuity,
             "mean": normalize_and_get_column_mean(column.mean),
             "minimum": normalize_and_get_column_min_max(column.minimum),
             "maximum": normalize_and_get_column_min_max(column.maximum),
+            "stationarity": 1 if column.stationarity else 0,
             "relationships": get_relationships_dictionary_representation(column.relationships)
         }
         if column.columns is not None:
@@ -43,8 +48,8 @@ def get_relationships_dictionary_representation(relationships: [Relationship]):
     for relationship in relationships:
         relationships_list.append(
             {
-                "certainty": normalize_and_get_relationship_certainty(relationship.certainty),
-                "target_file_hash": normalize_and_get_hash(relationship.target_file_hash),
+                "certainty": str(relationship.certainty),
+                "target_file_hash": str(relationship.target_file_hash),
                 "target_column_name": normalize_and_get_column_name(relationship.target_column_name)
             }
         )
