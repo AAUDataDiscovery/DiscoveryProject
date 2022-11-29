@@ -24,7 +24,6 @@
     },
     "columns": {
       "type": "array",
-      "$ref": "#",
       "items": [
         {
           "type": "object",
@@ -35,15 +34,21 @@
             "mean": {
               "type": ["number", "null"]
             },
+            "continuity": {
+              "type": ["number", "null"],
+              "min": 0,
+              "max": 1
+            },
             "minimum": {
               "type": ["integer","number", "string", "null"]
             },
             "maximum": {
               "type": ["integer","number", "string", "null"]
             },
-            "columns": {
-              "type": "array",
-              "$ref": "#"
+            "stationarity": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
             },
             "relationships": {
               "type": "array",
@@ -52,12 +57,12 @@
                   "type": "object",
                   "properties": {
                     "certainty": {
-                      "type": "number"
+                      "type": "number",
+                      "min": 0,
+                      "max": 100
                     },
                     "target_file_hash": {
-                      "type": "string",
-                      "minLength": 8,
-                      "maxLength": 8
+                      "type": "string"
                     },
                     "target_column_name": {
                       "type": "string"

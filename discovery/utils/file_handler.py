@@ -121,9 +121,12 @@ class FileHandler:
         return rust_utils.hash_file(paths)
 
 
-def construct_file_descriptor(file_path: str, extension: FileExtension, dataframe: pandas.DataFrame):
+def construct_file_descriptor(file_path: str, extension: FileExtension, dataframe_call: partial):
     size = os.stat(file_path).st_size
-    file_hash = 12345678
+    dataframe_data = next(dataframe_call())
+    file_hash = FileHandler.get_dataframe_hash(dataframe_data)
+    # use absolute paths for df names, as they must be unique
+    dataframe_name = os.path.abspath(file_path)
     return {
         "file_path": file_path,
         "extension": extension,

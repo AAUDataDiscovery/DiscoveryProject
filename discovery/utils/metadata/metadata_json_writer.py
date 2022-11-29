@@ -5,10 +5,12 @@ import numbers
 
 from discovery.utils.metadata.metadata import Metadata, ColMetadata, Relationship
 
+
 def write_metadata_to_json(metadata: Metadata):
     dictionary_representation = get_metadata_dictionary_representation(metadata)
     json_string = json.dumps(dictionary_representation)
-    write_json_to_file(dictionary_representation["file_path"], json_string)
+    generated_file_path = write_json_to_file(dictionary_representation["file_path"], json_string)
+    return generated_file_path
 
 
 def get_metadata_dictionary_representation(metadata: Metadata):
@@ -37,18 +39,15 @@ def get_columns_dictionary_representation(columns: [ColMetadata]):
             "stationarity": 1 if column.stationarity else 0,
             "relationships": get_relationships_dictionary_representation(column.relationships)
         }
-        if column.columns is not None:
-            column_dict["columns"] = get_columns_dictionary_representation(column.columns)
         columns_list.append(column_dict)
     return columns_list
-
 
 def get_relationships_dictionary_representation(relationships: [Relationship]):
     relationships_list = []
     for relationship in relationships:
         relationships_list.append(
             {
-                "certainty": str(relationship.certainty),
+                "certainty": relationship.certainty,
                 "target_file_hash": str(relationship.target_file_hash),
                 "target_column_name": normalize_and_get_column_name(relationship.target_column_name)
             }
@@ -60,6 +59,7 @@ def write_json_to_file(path, json_string):
     filename = '{}.metadata.json'.format(path)
     with open(filename, 'w') as file:
         file.write(json_string)
+    return  filename
 
 
 def normalize_and_get_filepath(file_path):
@@ -73,7 +73,7 @@ def normalize_and_get_extension(extension):
 def normalize_and_get_size(size):
     return {
         "quantity": size[0],
-        "unit": size[1].name
+        "unit": size[1].value
     }
 
 
