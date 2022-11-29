@@ -1,11 +1,14 @@
+import numpy
 import yaml
 import logging.config
 import os
 
 from discovery.data_matching.matching_methods import MatchColumnNamesLevenshtein
+from discovery.data_matching.matching_methods import MatchIdenticalRows
 from discovery.utils.metadata.metadata_json_handler import write_metadata_to_json
 from discovery.utils.visualizer import Visualizer
 from discovery.utils.metadata.metadata import add_tags_to_metadata
+from discovery.utils.metadata.metadata import add_possible_tags_to_metadata
 from discovery import DiscoveryClient
 from test.sandbox.setup import DATASETS
 from test.sandbox.setup import download_datasets
@@ -22,15 +25,15 @@ if __name__ == "__main__":
     logger = logging.getLogger(__name__)
 
     download_datasets()
-    exit()
 
-    test_file_path = 'data/world-happiness-report-2021.csv'
+    test_file_path = 'data/diabetes.csv'
 
     discovery_client = DiscoveryClient({})
     discovery_client.load_file(test_file_path)
 
     test_metadata = discovery_client.loaded_metadata[test_file_path]
     test_dataframe = next(test_metadata.datagen())
+    add_tags_to_metadata(test_metadata, DATASETS['diabetes.csv']['tags'])
 
     catalogue = []
 
@@ -65,7 +68,11 @@ if __name__ == "__main__":
                 numerical_percentage = 100 * (1 - abs(test_column.is_numeric_percentage -
                                                       column.is_numeric_percentage))
 
-                match_percentage = (levenshtein_percentage + continuity_percentage + numerical_percentage) / 3
+                unique_values_percentage = MatchIdenticalRows().run_process(test_dataframe.loc[:, test_column_name],
+                                                                            item['dataframe'].loc[:, column_name])
+
+                match_percentage = (levenshtein_percentage + continuity_percentage + numerical_percentage +
+                                    unique_values_percentage) / 4
 
                 columns[column.name] = match_percentage
 
@@ -82,6 +89,19 @@ if __name__ == "__main__":
             print('\t' + name + ' ' + str(percentage))
 
     tags = dict(sorted(tags.items(), key=lambda item: item[1], reverse=True))
-    print()
-    print()
-    print(tags)
+
+    # Normalize tag scores
+    min_tag_score = numpy.inf
+    max_tag_score = 0
+    for tag_score in tags.values():
+        if tag_score < min_tag_score:
+            min_tag_score = tag_score
+        if tag_score > max_tag_score:
+            max_tag_score = tag_score
+    for tag_name, tag_score in tags.items():
+        tags[tag_name] = (tag_score - min_tag_score) / (max_tag_score - min_tag_score)
+
+    add_possible_tags_to_metadata(test_metadata, tags)
+
+    visualizer = Visualizer()
+    visualizer.draw([test_metadata], 'output/run_tag_matcher')

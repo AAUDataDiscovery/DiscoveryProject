@@ -73,10 +73,12 @@ class Metadata:
             file_hash: int,
             no_of_rows: int,
             columns: [] = None,
-            tags: [] = None
+            tags: [] = None,
+            possible_tags: {} = None
     ):
         columns = columns or []
         tags = tags or []
+        possible_tags = possible_tags or {}
         self.file_path = file_path
         self.extension = extension
         self.size = size
@@ -84,6 +86,7 @@ class Metadata:
         self.no_of_rows = no_of_rows
         self.columns = columns
         self.tags = tags
+        self.possible_tags = possible_tags
         self.datagen = datagen
 
 
@@ -111,6 +114,11 @@ def add_tags_to_metadata(metadata: Metadata, tags: []):
     return metadata
 
 
+def add_possible_tags_to_metadata(metadata: Metadata, possible_tags: {}):
+    metadata.possible_tags.update(possible_tags)
+    return metadata
+
+
 def construct_column(column):
     is_numeric_probability, average, col_min, col_max, continuity, stationarity = get_col_statistical_values(column)
     return NumericColMetadata(column.name, column.dtype, is_numeric_probability, continuity, average, col_min, col_max,
@@ -123,8 +131,12 @@ def get_col_statistical_values(column):
     is_numeric_probability = column_numeric_percentage(column)
     is_numeric = is_numeric_probability > 0.05
 
-    col_min = column.min()
-    col_max = column.max()
+    try:
+        col_min = column.min()
+        col_max = column.max()
+    except TypeError:
+        col_min = column.astype("string").min()
+        col_max = column.astype("string").max()
 
     continuity = column_is_continuous_probability(column)
 

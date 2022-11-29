@@ -29,4 +29,4 @@ class MatchDataTwoSampleTTest(DataMatcher):
 
         # If the p-value is greater than 0.05, we accept the null hypothesis that the mean of the two groups is equal
         # Otherwise, we reject it, and claim that the means are different
-        return result_p_value > 0.05
+        return result_p_value

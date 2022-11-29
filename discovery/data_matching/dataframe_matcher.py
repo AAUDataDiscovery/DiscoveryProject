@@ -12,6 +12,9 @@ import pandas as pd
 import numpy
 
 from discovery.data_matching.data_match_interface import DataMatcher
+from discovery.data_matching.matching_methods import MatchColumnNamesLCS
+from discovery.data_matching.matching_methods import MatchColumnNamesLevenshtein
+from discovery.data_matching.matching_methods import MatchIdenticalRows
 from discovery.utils.metadata.metadata import Metadata, NumericColMetadata, ColMetadata
 
 logger = logging.getLogger(__name__)
@@ -88,12 +91,12 @@ class DataFrameMatcher:
         average_differences = {}
         minimum_differences = {}
         maximum_differences = {}
-        for column2 in metadata2.columns:
+        for column2 in metadata2.columns.values():
             # LCS name test
-            lcs_percentage = DataFrameMatcher.match_name_lcs(column1.name, column2.name)
+            lcs_percentage = MatchColumnNamesLCS().run_process(column1, column2)
 
             # Levenshtein name test
-            levenshtein_percentage = DataFrameMatcher.match_name_levenshtein(column1.name, column2.name)
+            levenshtein_percentage = MatchColumnNamesLevenshtein().run_process(column1, column2)
 
             # Data type test
             data_type_matches = 100 if column1.col_type == column2.col_type else 0
@@ -104,6 +107,10 @@ class DataFrameMatcher:
             # Numerical values test
             numerical_percentage = 100 * (1 - abs(column1.is_numeric_percentage -
                                                   column2.is_numeric_percentage))
+
+            # Unique values test
+            unique_values_percentage = MatchIdenticalRows().run_process(df1.loc[:, column1.name],
+                                                                        df2.loc[:, column2.name])
 
             # Average test
             if column1.mean is not None and column2.mean is not None:
@@ -127,10 +134,10 @@ class DataFrameMatcher:
 
             # Average similarity
             average_similarity = lcs_percentage + levenshtein_percentage + data_type_matches + \
-                                 continuity_percentage + numerical_percentage
+                                 continuity_percentage + numerical_percentage + unique_values_percentage
 
             scores[column2.name] = average_similarity
-            no_of_tests[column2.name] = 5
+            no_of_tests[column2.name] = 6
 
         # Normalize the average differences
         normalized_average_differences = DataFrameMatcher.normalize_values(average_differences)
@@ -150,7 +157,7 @@ class DataFrameMatcher:
             scores[name] += similarity
             no_of_tests[name] += 1
 
-        for column2 in metadata2.columns:
+        for column2 in metadata2.columns.values():
             scores[column2.name] /= no_of_tests[column2.name]
 
         best_similarity = 0
