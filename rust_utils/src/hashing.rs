@@ -1,12 +1,20 @@
-use std::fs::File;
-use std::io::{BufRead, BufReader};
+use std::fs::{File, read};
+use std::io::{BufRead, BufReader, Read, Seek, SeekFrom};
+use std::os::unix::prelude::FileExt;
+use std::sync::mpsc;
+use std::sync::mpsc::{Receiver, Sender};
+use std::thread;
 use adler32::RollingAdler32;
 use crc32fast::Hasher;
 use pyo3::pyfunction;
+use tokio_uring::fs::File as TokioFile;
+
+
+const CAP: usize = 1024 * 128;
+
 
 #[pyfunction]
 pub fn multithreaded_crc32_hash(paths: Vec<String>, number_of_threads: usize) -> Vec<u32> {
-    let mut results: Vec<u32> = Vec::new();
     let pool = rayon::ThreadPoolBuilder::new()
         .num_threads(number_of_threads)
         .build()
@@ -24,9 +32,159 @@ pub fn multithreaded_crc32_hash(paths: Vec<String>, number_of_threads: usize) ->
 }
 
 
+#[pyfunction]
+pub fn multithreaded_crc32_hash_with_single_io_thread(paths: Vec<String>, number_of_threads: usize) -> Vec<u32> {
+
+    let (io_tx, io_rx) = mpsc::channel();
+    thread::spawn(move || {
+        start_listening_to_io_requests(io_rx)
+    });
+
+    let pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(number_of_threads)
+        .build()
+        .unwrap();
+    let (tx, rx) = std::sync::mpsc::channel();
+    for f in paths.into_iter() {
+        let tx = tx.clone();
+        let io_tx = io_tx.clone();
+        pool.spawn(move || {
+            tx.send(crc32_hash_single_with_io_thread(f, io_tx)).unwrap();
+        });
+    }
+    drop(tx); // need to close all senders, otherwise...
+    drop(io_tx); // need to close all senders, otherwise...
+    let results: Vec<u32> = rx.into_iter().collect();
+    return results;
+}
+
+#[pyfunction]
+pub fn multithreaded_crc32_hash_with_uring(paths: Vec<String>, number_of_threads: usize) -> Vec<u32> {
+
+    let pool = threadpool::ThreadPool::new(number_of_threads);
+    let (tx, rx) = std::sync::mpsc::channel();
+    for f in paths.into_iter() {
+        let tx = tx.clone();
+        pool.execute(move || {
+            tx.send(crc32_hash_single_with_uring(f)).unwrap();
+        });
+    }
+    drop(tx); // need to close all senders, otherwise...
+    let results: Vec<u32> = rx.into_iter().collect();
+    return results;
+}
+
+
+fn crc32_hash_single_with_uring(path: String) -> u32 {
+    let mut hasher = Hasher::new();
+    tokio_uring::start(async {
+        // Open a file
+        let file = TokioFile::open(&path[0..]).await.unwrap();
+        let mut buf0 = vec![0; CAP];
+        let mut buf1 = vec![0; CAP];
+        let mut switcher = false;
+        let mut offset = 0;
+        loop {
+            if(switcher) {
+                let future = file.read_at(buf0, offset);
+                hasher.update(&buf1[0..]);
+                let (res, ret) = future.await;
+                let n = res.unwrap();
+
+                if n == 0 {
+                    break;
+                }
+
+                offset += n as u64;
+                buf0 = ret;
+            }
+            else {
+                let future = file.read_at(buf1, offset);
+                if(0 < offset) {
+                    hasher.update(&buf0[0..]);
+                }
+                let (res, ret) = future.await;
+                let n = res.unwrap();
+
+                if n == 0 {
+                    break;
+                }
+
+                offset += n as u64;
+                buf1 = ret;
+            }
+            switcher = !switcher;
+        }
+    });
+    return hasher.finalize();
+}
+
+// pub fn start_listening_to_io_requests(receiver: Receiver<(&mut BufReader<File>, Sender<Vec<u8>>)>) {
+//     for received in receiver {
+//         match received {
+//             (buff_reader, sender) => {
+//                 let buffer = buff_reader.fill_buf().unwrap();
+//                 sender.send(buffer.to_vec());
+//             }
+//         }
+//     }
+
+
+// pub fn start_listening_to_io_requests(receiver: Receiver<(String, u64, Sender<(&[u8], u64, bool)>)>) {
+//     for received in receiver {
+//         match received {
+//             (path, offset, sender) => {
+//                 let mut opened_file = File::open(path).unwrap();
+//                 let mut reader = BufReader::with_capacity(CAP, opened_file);
+//                 reader.seek(SeekFrom::Start(offset)).unwrap();
+//                 let buffer = reader.fill_buf().unwrap();
+//                 let new_offset = reader.
+//                 sender.send(buffer,)
+//             }
+//         }
+//     }
+// }
+
+pub fn start_listening_to_io_requests(receiver: Receiver<(String, u64, Sender<(Vec<u8>, usize)>)>) {
+    for received in receiver {
+        match received {
+            (path, offset, sender) => {
+                let mut opened_file = File::open(path).unwrap();
+                let mut buffer = [0u8; CAP];
+                let read_count = opened_file.read_at(&mut buffer, offset).unwrap();
+                sender.send((buffer.to_vec(), read_count));
+            }
+        }
+    }
+}
+
+
+
+fn crc32_hash_single_with_io_thread(path: String, io_tx: Sender<(String, u64, Sender<(Vec<u8>, usize)>)>) -> u32 {
+    let (local_tx, local_rx) = mpsc::channel();
+    let mut hasher = Hasher::new();
+    let mut offset = 0;
+
+    loop {
+    let local_path = path.clone();
+    io_tx.send((local_path, offset, local_tx.clone())).unwrap();
+        let result = local_rx.recv().unwrap();
+        if result.1 == 0 {
+            break;
+        }
+        else {
+            offset += u64::try_from(result.1).unwrap();
+            let local_local_path = path.clone();
+            io_tx.send((local_local_path, offset, local_tx.clone())).unwrap();
+            hasher.update(&result.0[0..]);
+        }
+    }
+    return hasher.finalize();
+}
+
+
 
 fn crc32_hash_single(path: String) -> u32 {
-    const CAP: usize = 1024 * 128;
     let mut hasher = Hasher::new();
     let file = File::open(path).unwrap();
 
