@@ -7,9 +7,10 @@ use std::thread;
 use adler32::RollingAdler32;
 use crc32fast::Hasher;
 use pyo3::pyfunction;
+use std::fs::*;
+use std::os::unix::io::AsRawFd;
+use nix::fcntl::*;
 use tokio_uring::fs::File as TokioFile;
-
-
 const CAP: usize = 1024 * 128;
 
 
@@ -77,47 +78,63 @@ pub fn multithreaded_crc32_hash_with_uring(paths: Vec<String>, number_of_threads
 
 fn crc32_hash_single_with_uring(path: String) -> u32 {
     let mut hasher = Hasher::new();
-    tokio_uring::start(async {
-        // Open a file
-        let file = TokioFile::open(&path[0..]).await.unwrap();
-        let mut buf0 = vec![0; CAP];
-        let mut buf1 = vec![0; CAP];
-        let mut switcher = false;
-        let mut offset = 0;
-        loop {
-            if(switcher) {
-                let future = file.read_at(buf0, offset);
-                hasher.update(&buf1[0..]);
-                let (res, ret) = future.await;
-                let n = res.unwrap();
+        tokio_uring::builder()
+        .entries(1)
+        .uring_builder(
+            tokio_uring::uring_builder()
+            .setup_cqsize(4))
+        .start(  async {
+            let file = TokioFile::open(&path[0..]).await.unwrap();
+            let mut buffers0 = vec![Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP)];
+            let mut buffers1 = vec![Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP)];
+            let mut switcher = false;
+            let mut offset = 0;
 
-                if n == 0 {
-                    break;
+            loop {
+                if (switcher) {
+                    let future = file.readv_at(buffers0, offset);
+                    let no_op_future = tokio_uring::no_op();
+                    for buf in &buffers1 {
+                        hasher.update(&buf[0..]);
+                    }
+                    let (res, ret) = future.await;
+                    let n = res.unwrap();
+
+                    if n == 0 {
+                        break;
+                    }
+
+                    offset += n as u64;
+                    buffers0 = ret;
+                } else {
+                    let future = file.readv_at(buffers1, offset);
+                    let no_op_future = tokio_uring::no_op();
+                    if (0 < offset) {
+                    for buf in &buffers0 {
+                        hasher.update(&buf[0..]);
+                    }                    }
+                    let (res, ret) = future.await;
+                    let n = res.unwrap();
+
+                    if n == 0 {
+                        break;
+                    }
+
+                    offset += n as u64;
+                    buffers1 = ret;
                 }
-
-                offset += n as u64;
-                buf0 = ret;
+                switcher = !switcher;
+                // Don't await the no_op future otherwise a similar problem.
+                // Just let the no_op_future get cancelled. The uring driver
+                // should handle the cleanup elegantly without having to stall
+                // the thread.
+                //
+                //     let _ = no_op_future.await
             }
-            else {
-                let future = file.read_at(buf1, offset);
-                if(0 < offset) {
-                    hasher.update(&buf0[0..]);
-                }
-                let (res, ret) = future.await;
-                let n = res.unwrap();
-
-                if n == 0 {
-                    break;
-                }
-
-                offset += n as u64;
-                buf1 = ret;
-            }
-            switcher = !switcher;
-        }
-    });
+        });
     return hasher.finalize();
 }
+
 
 // pub fn start_listening_to_io_requests(receiver: Receiver<(&mut BufReader<File>, Sender<Vec<u8>>)>) {
 //     for received in receiver {
