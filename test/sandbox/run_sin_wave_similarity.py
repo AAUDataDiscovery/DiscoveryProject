@@ -2,7 +2,7 @@ import numpy as np
 import yaml
 import logging.config
 
-from utils.file_handler import FileHandler
+from utils.data_system_handlers.local_file_handler import FileHandler
 from utils.datagen import FakeDataGen
 from data_matching.dataframe_matcher import DataFrameMatcher
 

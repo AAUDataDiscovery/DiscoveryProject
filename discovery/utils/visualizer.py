@@ -1,7 +1,7 @@
 from typing import Optional
 import graphviz
 
-from discovery.utils.metadata.metadata import Metadata
+from metadata import CatalogueMetadata
 
 
 class SubGraphNode:
@@ -60,14 +60,14 @@ class Visualizer:
         start_graph.engine = self.engine
         return start_graph
 
-    def draw(self, metadata: [Metadata], filename: str):
+    def draw(self, metadata: [CatalogueMetadata], filename: str):
         self._draw_metadata(metadata)
         # self.draw_relationships(metadata)
         self._finalize_result_graph(filename)
 
     def _draw_metadata(self, metadata):
         for datum in metadata:
-            self.working_node = self._determine_working_node(datum.file_path)
+            self.working_node = self._determine_working_node(datum.tags.get('file_path'))
             self._draw_metadatum(datum)
 
     # Don't use it, not implemented properly
@@ -84,21 +84,23 @@ class Visualizer:
         self.root.recursively_append_subgraphs()
         self.root.graph.view(output_filename)
 
-    def _draw_metadatum(self, metadatum: Metadata):
+    def _draw_metadatum(self, metadatum: CatalogueMetadata):
         columns = self._draw_table_columns(metadatum)
         filled_table = self._draw_filled_metadatum_table(metadatum, columns)
-        self.working_node.graph.node(str(metadatum.hash), filled_table)
+        self.working_node.graph.node(str(metadatum.data_checksum), filled_table)
 
     # TODO: make it more generic
     def _draw_table_columns(self, metadatum):
         col_rows: str = ""
         for column in metadatum.columns.values():
-            col_rows += '<TR><TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD>' \
-                .format(column.name, column.col_type, str(round(column.is_numeric_percentage * 100, 2)) + '%',
+            col_rows += '<TR><TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> '\
+                .format(column.name, column.col_type,
                         str(round(column.continuity * 100, 2)) + '%',
-                        (column.mean if column.mean is not None else "NA"),
-                        column.minimum, column.maximum,
-                        'NA' if column.stationarity is None else ('Yes' if column.stationarity == 1 else 'No'))
+                        getattr(column, "mean", "NA"),
+                        getattr(column, "minimum", "NA"),
+                        getattr(column, "maximum", "NA")
+                        )
+                        # 'NA' if column.stationarity is None else ('Yes' if column.stationarity == 1 else 'No'))
 
             for relationship in column.relationships:
                 col_rows += '<TD>' + relationship.target_column_name + ' ' + \
@@ -111,7 +113,7 @@ class Visualizer:
         filled_table = f'''<
             <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
               <TR>
-                <TD COLSPAN="8" BGCOLOR="darkgrey">{metadatum.file_path}</TD>
+                <TD COLSPAN="8" BGCOLOR="darkgrey">{metadatum.tags.get("file_path", None)}</TD>
               </TR>
               <TR>
                 <TD COLSPAN="8" BGCOLOR="darkgrey">{metadatum.no_of_rows} rows</TD>
@@ -123,19 +125,19 @@ class Visualizer:
                 <TD BGCOLOR="lightgray">Name</TD>
                 <TD BGCOLOR="lightgray">Type</TD>
                 <TD BGCOLOR="lightgray">Numeric</TD>
-                <TD BGCOLOR="lightgray">Continuity</TD>
                 <TD BGCOLOR="lightgray">Average</TD>
                 <TD BGCOLOR="lightgray">Lowest</TD>
                 <TD BGCOLOR="lightgray">Highest</TD>
-                <TD BGCOLOR="lightgray">Stationarity</TD>
                 '''
+        # <TD BGCOLOR="lightgray">Continuity</TD>
+        # <TD BGCOLOR="lightgray">Stationarity</TD>
 
         for column in metadatum.columns.values():
             if column.relationships:
                 # map the certainties to a key, multiple certainties will override each other, but we only care about one
                 certainty_map = {relationship.certainty: relationship for relationship in column.relationships}
                 highest_certainty = certainty_map[max(certainty_map)]
-                filled_table += f"<TD BGCOLOR='lightgray'>Best column match in {highest_certainty.target_file_hash}</TD>"
+                filled_table += f"<TD BGCOLOR='lightgray'>Best column match in {highest_certainty.target_hash}</TD>"
 
         filled_table += f"</TR>{col_strings}</TABLE>>"
 

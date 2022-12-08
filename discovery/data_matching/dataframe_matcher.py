@@ -12,7 +12,7 @@ import pandas as pd
 import numpy
 
 from discovery.data_matching.data_match_interface import DataMatcher
-from discovery.utils.metadata.metadata import Metadata, NumericColMetadata, ColMetadata
+from metadata import CatalogueMetadata, NumericColMetadata, ColMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -25,8 +25,8 @@ class DataFrameMatcher:
             col_meta2: ColMetadata,
             series1: pd.Series = None,
             series2: pd.Series = None,
-            metadata1: Metadata = None,
-            metadata2: Metadata = None,
+            metadata1: CatalogueMetadata = None,
+            metadata2: CatalogueMetadata = None,
             weights: list[int] = None
     ) -> (dict, int):
         """
@@ -74,7 +74,7 @@ class DataFrameMatcher:
 
     @staticmethod
     def match_column_in_dataframe(df1: pd.DataFrame, column1: NumericColMetadata,
-                                  metadata2: Metadata, df2: pd.DataFrame):
+                                  metadata2: CatalogueMetadata, df2: pd.DataFrame):
         """
         Find the best match of a column in another dataframe
         :param df1:

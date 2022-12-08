@@ -7,7 +7,8 @@ TODO:
     add decorators for enforcing int values
 """
 import pandas as pd
-from discovery.utils.metadata.metadata import ColMetadata, Metadata
+from discovery.metadata import ColMetadata, CatalogueMetadata
+import metadata
 
 
 class DataMatcher:
@@ -16,12 +17,12 @@ class DataMatcher:
 
     def match_columns(
             self,
-            col_meta1: ColMetadata,
-            col_meta2: ColMetadata,
+            col_meta1: metadata.ColMetadata,
+            col_meta2: metadata.ColMetadata,
             series1: pd.Series = None,
             series2: pd.Series = None,
-            metadata1: Metadata = None,
-            metadata2: Metadata = None
+            metadata1: metadata.CatalogueItem = None,
+            metadata2: metadata.CatalogueItem = None
 
     ) -> int:
         incoming = locals()
@@ -34,8 +35,8 @@ class DataMatcher:
             col_meta2: ColMetadata,
             series1: pd.Series = None,
             series2: pd.Series = None,
-            metadata1: Metadata = None,
-            metadata2: Metadata = None
+            metadata1: CatalogueMetadata = None,
+            metadata2: CatalogueMetadata = None
     ) -> int:
         """
         Run the actual implemented process
