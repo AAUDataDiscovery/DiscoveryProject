@@ -31,6 +31,9 @@ fn rust_utils(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(hashing::multithreaded_adler32_hash, m)?)?;
     m.add_function(wrap_pyfunction!(hashing::fletcher16_hash, m)?)?;
     m.add_function(wrap_pyfunction!(hashing::multithreaded_crc32_hash, m)?)?;
+    m.add_function(wrap_pyfunction!(daemon_client::create_daemon, m)?)?;
+    m.add_function(wrap_pyfunction!(daemon_client::get_daemon_status, m)?)?;
+    m.add_function(wrap_pyfunction!(daemon_client::stop_daemon, m)?)?;
 
 
     Ok(())

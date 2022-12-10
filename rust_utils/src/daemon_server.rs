@@ -14,7 +14,7 @@ use crate::daemon_common::DaemonCommand::{SHUTDOWN, STATUS};
 use crate::daemon_common::InotifyEvent::MODIFIED_PENDING;
 use crate::hashing::{crc32_hash_single_with_uring_for_daemon};
 
-pub fn start_daemon(files: Vec<String>) {
+pub fn daemon(files: Vec<String>) {
     //initialize
 
     let files_clone= files.clone();
@@ -229,9 +229,8 @@ fn handle_incoming_command(command: (DaemonCommand, UnixStream), status: DaemonS
             stream.write(&serialized_response);
         }
         ( SHUTDOWN(id), mut stream) => {
-            let str = format!("exiting: {}",id);
-            stream.write(str.as_ref());
-            exit(15);
+            println!("server exiting: {}",id);
+            exit(0);
         }
     }
     //events must be cleared after sent

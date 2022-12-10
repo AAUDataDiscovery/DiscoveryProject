@@ -1,7 +1,7 @@
 use std::fmt;
 use std::time::{SystemTime, UNIX_EPOCH};
 use serde::{Deserialize, Serialize};
-
+use pyo3::pyclass;
 pub static SOCKET_PATH: &'static str = "/tmp/file-monitor-daemon-socket";
 pub(crate) enum DaemonCommand {
     STATUS(u32),
@@ -54,12 +54,14 @@ pub(crate) struct DaemonMonitoredItem {
     pub(crate) last_changed: u128
 }
 
+
 #[derive(Serialize, Deserialize, Copy, Clone, Debug)]
 pub(crate) enum DaemonStatus {
     INITIALIZING(u64),
     PROCESSING(u64),
     IDLING
 }
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub(crate) enum InotifyEvent {
     MODIFIED(String),
