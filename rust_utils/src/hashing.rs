@@ -96,11 +96,14 @@ fn crc32_hash_single_with_uring(paths: Vec<String>) -> Vec<u32> {
             let mut notFirstIter = false;
             loop {
                 if (switcher) {
+                    //clean buffer
+                    buffers0 = vec![Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP)];
                     let future = file.readv_at(buffers0, offset);
                     let no_op_future = tokio_uring::no_op();
                     for buf in &buffers1 {
-                        hasher.update(&buf[0..]);
-                    }
+                            if(0 < buf.len()) {
+                                hasher.update(&buf[0..]);
+                            }                    }
                     let (res, ret) = future.await;
                     let n = res.unwrap();
 
@@ -108,16 +111,22 @@ fn crc32_hash_single_with_uring(paths: Vec<String>) -> Vec<u32> {
                         break;
                     }
 
+
                     offset += n as u64;
                     buffers0 = ret;
+                    notFirstIter = true;
                 } else {
+                    //clean buffer
+                    buffers1 = vec![Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP)];
                     let future = file.readv_at(buffers1, offset);
                     let no_op_future = tokio_uring::no_op();
                     if (notFirstIter) {
-                    for buf in &buffers0 {
-                        hasher.update(&buf[0..]);
-                        notFirstIter = true;
-                    }                    }
+                        for buf in &buffers0 {
+                            if(0 < buf.len()) {
+                                hasher.update(&buf[0..]);
+                            }
+                        }
+                    }
                     let (res, ret) = future.await;
                     let n = res.unwrap();
 
@@ -151,18 +160,20 @@ pub fn crc32_hash_single_with_uring_for_daemon(path: String) -> (String, u32) {
         .setup_cqsize(4))
     .start(  async {
             let file = TokioFile::open(&path).await.unwrap();
-            let mut buffers0 = vec![Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP)];
-            let mut buffers1 = vec![Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP)];
+            let mut buffers0 = vec![Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP)];
+            let mut buffers1 = vec![Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP)];
             let mut switcher = false;
             let mut offset = 0;
             let mut notFirstIter = false;
-            loop {
+                        loop {
                 if (switcher) {
+                    //clean buffer
+                    let mut buffers0 = vec![Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP)];
                     let future = file.readv_at(buffers0, offset);
                     let no_op_future = tokio_uring::no_op();
                     for buf in &buffers1 {
                         hasher.update(&buf[0..]);
-                    }
+                     }
                     let (res, ret) = future.await;
                     let n = res.unwrap();
 
@@ -170,16 +181,20 @@ pub fn crc32_hash_single_with_uring_for_daemon(path: String) -> (String, u32) {
                         break;
                     }
 
+
                     offset += n as u64;
                     buffers0 = ret;
+                    notFirstIter = true;
                 } else {
+                    //clean buffer
+                    let mut buffers1 = vec![Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP)];
                     let future = file.readv_at(buffers1, offset);
                     let no_op_future = tokio_uring::no_op();
                     if (notFirstIter) {
-                    for buf in &buffers0 {
-                        hasher.update(&buf[0..]);
-                        notFirstIter = true;
-                    }                    }
+                        for buf in &buffers0 {
+                            hasher.update(&buf[0..]);
+                        }
+                    }
                     let (res, ret) = future.await;
                     let n = res.unwrap();
 

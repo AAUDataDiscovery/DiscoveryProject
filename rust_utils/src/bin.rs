@@ -1,5 +1,6 @@
 use std::{thread, time};
 use rust_utils::daemon_client::create_daemon;
+use rust_utils::hashing;
 
 fn main () {
     // thread::spawn(|| {
@@ -23,11 +24,12 @@ fn main () {
     // rust_utils::daemon_client::get_daemon_status();
 
 
-    let files = Vec::from([String::from("/home/balazs/Downloads/test_data/archive/ACC_3minute_data.csv"),
-            String::from("/home/balazs/Downloads/test_data/archive/ACC_5minute_data.csv"),
-        String::from("/home/balazs/Downloads/test_data/archive/ACC_10minute_data.csv"), String::from("/home/balazs/Downloads/test_data/archive/kaka")]);
-
-    //create_daemon(files);
-    //rust_utils::daemon_client::get_daemon_status();
-    rust_utils::daemon_client::stop_daemon();
+    // let files = Vec::from([ String::from("/home/balazs/Downloads/test_data/archive/kaka")]);
+    //
+    // //create_daemon(files);
+    // let status = rust_utils::daemon_client::get_daemon_status();
+    // //rust_utils::daemon_client::stop_daemon();
+    // println!("aaaaaa");
+    let files = Vec::from([ String::from("/home/balazs/Downloads/test_data/archive/HINDALCO_60minute_data.csv")]);
+    hashing::multithreaded_crc32_hash_with_uring(files, 4);
 }

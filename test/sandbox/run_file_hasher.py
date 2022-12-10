@@ -26,7 +26,7 @@ duplication = []
 for _ in range(0, 40):
     duplication += filenames
 
-
+# duplication = ["/home/balazs/Downloads/test_data/archive/HINDALCO_60minute_data.csv"]
 def call_python_hash():
     result = FileHandler.get_python_file_hash(duplication)
     print(len(result))
@@ -140,10 +140,11 @@ def call_fletcher16_single():
     print(len(result))
     print(result[-1])
 
-print("python:" + str(timeit.Timer(call_python_hash).timeit(number=1)))
+# print("python:" + str(timeit.Timer(call_python_hash).timeit(number=1)))
+# print("-----------------------------")
+print("rust uring: " + str(timeit.Timer(call_crc32_multi_4_uring_io).timeit(number=1)))
 print("-----------------------------")
-print("rust: " + str(timeit.Timer(call_crc32_multi_4_uring_io).timeit(number=1)))
-print("-----------------------------")
+print("rust simple: " + str(timeit.Timer(call_crc32_multi_4).timeit(number=1)))
 
 
 
