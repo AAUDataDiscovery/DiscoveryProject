@@ -140,9 +140,9 @@ def call_fletcher16_single():
     print(len(result))
     print(result[-1])
 
-# print("bitchboi soy snake: " + str(timeit.Timer(call_python_hash).timeit(number=1)))
-# print("-----------------------------")
-print("chad rust: " + str(timeit.Timer(call_crc32_multi_4_uring_io).timeit(number=20)))
+print("python:" + str(timeit.Timer(call_python_hash).timeit(number=1)))
+print("-----------------------------")
+print("rust: " + str(timeit.Timer(call_crc32_multi_4_uring_io).timeit(number=1)))
 print("-----------------------------")
 
 

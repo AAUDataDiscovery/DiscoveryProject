@@ -6,7 +6,12 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
 name = "rust_utils"
-crate-type = ["cdylib"]
+path = "src/lib.rs"
+crate-type = ["cdylib", "lib"]
+
+[[bin]]
+name = "runner"
+path = "src/bin.rs"
 
 [dependencies]
 pyo3 = { version = "0.17.1", features = ["extension-module"] }
@@ -18,3 +23,7 @@ tokio-uring = { version = "0.4.0" }
 threadpool = "1.8.1"
 async-std = "1.12.0"
 nix = "0.26.1"
+rand = "0.8.5"
+bincode = "1.3.3"
+serde = { version = "1.0.149", features = ["derive"] }
+inotify = "0.10"
