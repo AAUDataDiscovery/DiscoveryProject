@@ -42,7 +42,9 @@ pub(crate) struct DaemonResponse {
 pub(crate) struct DaemonEvent {
     pub(crate) path: String,
     pub(crate) crc32: u32,
-    pub(crate) triggered: u128
+    pub(crate) triggered: u128,
+    pub(crate) kind: InotifyEvent
+
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -58,6 +60,14 @@ pub(crate) enum DaemonStatus {
     PROCESSING(u64),
     IDLING
 }
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub(crate) enum InotifyEvent {
+    MODIFIED(String),
+    DELETED(String),
+    MODIFIED_PENDING,
+    MODIFIED_NO_CHANGE,
+}
+
 
 pub fn get_current_time_as_millis() -> u128 {
     let start = SystemTime::now();

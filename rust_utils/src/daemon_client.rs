@@ -42,7 +42,6 @@ pub fn get_daemon_status() -> () {
     let response = read_from_stream(&mut unix_stream);
     let decoded: DaemonResponse = bincode::deserialize(&response[..]).unwrap();
     println!("{:#?}", decoded.status);
-
 }
 
 fn read_from_stream(unix_stream: &mut UnixStream) -> Vec<u8> {

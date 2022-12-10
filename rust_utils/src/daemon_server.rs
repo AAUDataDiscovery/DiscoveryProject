@@ -9,21 +9,20 @@ use inotify::{
     EventMask,
     WatchMask,
     Inotify
-};use crate::daemon_common::{DaemonCommand, DaemonEvent, DaemonMonitoredItem, DaemonResponse, DaemonStatus, get_current_time_as_millis, SOCKET_PATH};
+};use crate::daemon_common::{DaemonCommand, DaemonEvent, DaemonMonitoredItem, DaemonResponse, DaemonStatus, get_current_time_as_millis, InotifyEvent, SOCKET_PATH};
 use crate::daemon_common::DaemonCommand::{SHUTDOWN, STATUS};
+use crate::daemon_common::InotifyEvent::MODIFIED_PENDING;
 use crate::hashing::{crc32_hash_single_with_uring_for_daemon};
 
 pub fn start_daemon(files: Vec<String>) {
     //initialize
 
-    let mut inotify = inotify::Inotify::init().expect("Failed to initialize inotify");
-    for file in files.as_slice() {
-        inotify.add_watch(
-                file,
-                WatchMask::MODIFY | WatchMask::DELETE,
-        ).expect("couldn't add file watch");
-    }
+    let files_clone= files.clone();
 
+    let (inotify_tx, inotify_rx) = mpsc::channel();
+    thread::spawn(move || {
+        inotify_thread(files_clone, inotify_tx);
+    });
     let command_rx = setup_command_listener();
 
     let mut status = DaemonStatus::INITIALIZING(files.len() as u64);
@@ -78,21 +77,39 @@ pub fn start_daemon(files: Vec<String>) {
     //main loop
     loop {
         //listen to inofity events
+        for inotify_event in inotify_rx.try_iter() {
+            match inotify_event {
+                InotifyEvent::MODIFIED(path) => {
 
-        let mut buffer = [0; 1024];
-        let inotify_events = inotify.read_events(&mut buffer)
-            .expect("Error while reading events");
+                    if let DaemonStatus::PROCESSING(count) = status {
+                        let newCount = count+1;
+                        status = DaemonStatus::PROCESSING(newCount);
+                    };
 
-        for event in inotify_events {
-            let path = event.name.un
-            if event.mask.contains(EventMask::MODIFY) {
+                    if let DaemonStatus::IDLING = status {
+                        status = DaemonStatus::PROCESSING(1);
+                    };
 
+                    events.push(DaemonEvent{
+                        path: path.clone(),
+                        crc32: 0,
+                        triggered: get_current_time_as_millis(),
+                        kind: InotifyEvent::MODIFIED_PENDING
+                    });
+                    file_tx.send(Vec::from([path]));
+                }
+                InotifyEvent::DELETED(path) => {
+                    events.push(DaemonEvent{
+                        path: path.clone(),
+                        crc32: 0,
+                        triggered: get_current_time_as_millis(),
+                        kind: InotifyEvent::DELETED(path.clone())
+                    });
+                   let index = monitored.iter().position(|item| item.path == path).unwrap();
+                    monitored.remove(index);
+                }
+                _ => {}
             }
-            else if event.mask.contains(EventMask::DELETE) {
-                let index = monitored.iter().position(|x| *x.path == event.name).unwrap();
-                xs.remove(index);
-            }
-
         }
 
 
@@ -107,36 +124,79 @@ pub fn start_daemon(files: Vec<String>) {
 
         //listen to hash results
         for result in hash_rx.try_iter() {
+            let mut hasChange = false;
             for item in monitored.iter_mut() {
                 if item.path == result.0 {
-                    item.crc32 = result.1;
-                    item.last_changed = get_current_time_as_millis();
+                    if(item.crc32 != result.1) {
+                        item.crc32 = result.1;
+                        hasChange = true;
+                        item.last_changed = get_current_time_as_millis();
+                    }
                 }
             }
             //updated the events too
             for item in events.iter_mut() {
                 if item.path == result.0 {
-                    item.crc32 = result.1;
+                   item.crc32 = result.1;
+                    if(hasChange) {
+                        item.kind = InotifyEvent::MODIFIED(item.path.clone())
+                    }
+                    else {
+                        item.kind = InotifyEvent::MODIFIED_NO_CHANGE;
+                    }
                 }
+            }
+            if let DaemonStatus::PROCESSING(count) = status {
+                let newCount = count-1;
+                if(newCount == 0) {
+                    status = DaemonStatus::IDLING;
+                }
+                else {
+                    status = DaemonStatus::PROCESSING(newCount);
+                }
+            };
+        }
+    }
+}
+
+
+fn inotify_thread(files: Vec<String>, tx: Sender<InotifyEvent>) {
+    let mut inotify = inotify::Inotify::init().expect("Failed to initialize inotify");
+    let mut watched: Vec<(String, inotify::WatchDescriptor)> = vec![];
+    for file in files {
+        let watch = inotify.add_watch(
+                file.clone(),
+                inotify::WatchMask::MODIFY | inotify::WatchMask::DELETE
+        ).expect("couldn't add file watch");
+        watched.push((file, watch));
+    }
+
+    loop {
+        let mut buffer = [0; 1024];
+        let inotify_events = inotify.read_events_blocking(&mut buffer)
+            .expect("Error while reading events");
+
+        for event in inotify_events {
+            let index = watched.iter().position(|(file, wd)| *wd == event.wd).unwrap();
+            let path = &watched[index].0;
+            let localPath = String::from(path);
+            let localPath2 = localPath.as_str();
+            let deleted = !std::path::Path::new(localPath2).exists();
+            if(deleted) {
+                watched.remove(index);
+                tx.send(InotifyEvent::DELETED(localPath)).expect("failed to send delete event");
+            }
+            else {
+                let watch = inotify.add_watch(
+                    localPath.clone(),
+                    inotify::WatchMask::MODIFY | inotify::WatchMask::DELETE
+                ).expect("couldn't add file watch");
+                watched[index] = (localPath.clone(), watch);
+                tx.send(InotifyEvent::MODIFIED(localPath)).expect("failed to send modified event");
             }
         }
     }
-
-
-        //hash all files and add it to monitored
-        //setup worker thread
-    //setup notification
-
-    //loop
-    //listen to notification
-        //if change:
-        //add to worker queue
-
-    //listen to commands
-
-    //listen to worker queue
 }
-
 fn hasher_thread(file_rx: Receiver<Vec<String>>, hash_tx: Sender<(String, u32)>) {
     let pool = rayon::ThreadPoolBuilder::new()
     .num_threads(4)
@@ -162,7 +222,7 @@ fn handle_incoming_command(command: (DaemonCommand, UnixStream), status: DaemonS
             let response = DaemonResponse {
                 responseId: id,
                 status: status,
-                events,
+                events: events.clone(),
                 monitored: monitored
             };
             let serialized_response = bincode::serialize(&response).unwrap();
@@ -175,8 +235,17 @@ fn handle_incoming_command(command: (DaemonCommand, UnixStream), status: DaemonS
         }
     }
     //events must be cleared after sent
-    let mut events: Vec<DaemonEvent> = vec![];
-    events
+    let mut new_events:Vec<DaemonEvent> = vec![];
+
+    //only keep events that haven't finished yet
+    for event in events {
+        match event.kind {
+            MODIFIED_PENDING => {new_events.push(event)}
+            _ => {},
+        }
+    }
+
+    new_events
 }
 
 
@@ -207,7 +276,6 @@ fn setup_command_listener() -> Receiver<(DaemonCommand, UnixStream)> {
 }
 
 fn create_unix_listener() -> UnixListener {
-
     if std::fs::metadata(SOCKET_PATH).is_ok() {
         println!("A socket is already present. Deleting...");
         std::fs::remove_file(SOCKET_PATH);
