@@ -81,7 +81,7 @@ pub fn multithreaded_crc32_hash_with_uring(paths: Vec<String>, number_of_threads
 fn crc32_hash_single_with_uring(paths: Vec<String>) -> Vec<u32> {
     let mut results: Vec<u32> = Vec::new();
     tokio_uring::builder()
-    .entries(3)
+    .entries(2)
     .uring_builder(
         tokio_uring::uring_builder()
         .setup_cqsize(4))
@@ -101,9 +101,8 @@ fn crc32_hash_single_with_uring(paths: Vec<String>) -> Vec<u32> {
                     let future = file.readv_at(buffers0, offset);
                     let no_op_future = tokio_uring::no_op();
                     for buf in &buffers1 {
-                            if(0 < buf.len()) {
-                                hasher.update(&buf[0..]);
-                            }                    }
+                        hasher.update(&buf[0..]);
+                    }
                     let (res, ret) = future.await;
                     let n = res.unwrap();
 
@@ -122,9 +121,7 @@ fn crc32_hash_single_with_uring(paths: Vec<String>) -> Vec<u32> {
                     let no_op_future = tokio_uring::no_op();
                     if (notFirstIter) {
                         for buf in &buffers0 {
-                            if(0 < buf.len()) {
-                                hasher.update(&buf[0..]);
-                            }
+                            hasher.update(&buf[0..]);
                         }
                     }
                     let (res, ret) = future.await;
@@ -134,8 +131,8 @@ fn crc32_hash_single_with_uring(paths: Vec<String>) -> Vec<u32> {
                         break;
                     }
 
-                    offset += n as u64;
                     buffers1 = ret;
+                    offset += n as u64;
                 }
                 switcher = !switcher;
                 // Don't await the no_op future otherwise a similar problem.
@@ -154,26 +151,26 @@ fn crc32_hash_single_with_uring(paths: Vec<String>) -> Vec<u32> {
 pub fn crc32_hash_single_with_uring_for_daemon(path: String) -> (String, u32) {
     let mut hasher = Hasher::new();
     tokio_uring::builder()
-    .entries(3)
+    .entries(1)
     .uring_builder(
         tokio_uring::uring_builder()
         .setup_cqsize(4))
     .start(  async {
             let file = TokioFile::open(&path).await.unwrap();
-            let mut buffers0 = vec![Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP)];
-            let mut buffers1 = vec![Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP)];
+            let mut buffers0 = vec![Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP)];
+            let mut buffers1 = vec![Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP)];
             let mut switcher = false;
             let mut offset = 0;
             let mut notFirstIter = false;
-                        loop {
+            loop {
                 if (switcher) {
                     //clean buffer
-                    let mut buffers0 = vec![Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP)];
+                    buffers0 = vec![Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP)];
                     let future = file.readv_at(buffers0, offset);
                     let no_op_future = tokio_uring::no_op();
                     for buf in &buffers1 {
                         hasher.update(&buf[0..]);
-                     }
+                    }
                     let (res, ret) = future.await;
                     let n = res.unwrap();
 
@@ -187,7 +184,7 @@ pub fn crc32_hash_single_with_uring_for_daemon(path: String) -> (String, u32) {
                     notFirstIter = true;
                 } else {
                     //clean buffer
-                    let mut buffers1 = vec![Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP)];
+                    buffers1 = vec![Vec::<u8>::with_capacity(CAP), Vec::<u8>::with_capacity(CAP)];
                     let future = file.readv_at(buffers1, offset);
                     let no_op_future = tokio_uring::no_op();
                     if (notFirstIter) {
@@ -202,8 +199,8 @@ pub fn crc32_hash_single_with_uring_for_daemon(path: String) -> (String, u32) {
                         break;
                     }
 
-                    offset += n as u64;
                     buffers1 = ret;
+                    offset += n as u64;
                 }
                 switcher = !switcher;
                 // Don't await the no_op future otherwise a similar problem.
@@ -213,6 +210,7 @@ pub fn crc32_hash_single_with_uring_for_daemon(path: String) -> (String, u32) {
                 //
                 //     let _ = no_op_future.await
             }
+
     });
     (path, hasher.finalize())
 }
