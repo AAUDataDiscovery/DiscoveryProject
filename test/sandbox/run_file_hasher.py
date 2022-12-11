@@ -1,142 +1,151 @@
 import os
+import zlib
 
 from rust_utils import rust_utils
 
-from utils.datagen import FakeDataGen
-from utils.file_handler import FileHandler
 import timeit
-import shutil
 
 # file_handler = FileHandler()
 # file_handler.scan_filesystem("/home/balazs/Downloads/test_data/archive")
 
 filenames = []
-for root, dirs, files in os.walk("/home/balazs/Downloads/test_data"):
+for root, dirs, files in os.walk("/home/balazs/Documents/random_data_small"):
     for filename in files:
-        if filename.endswith(".csv"):
+        if filename.endswith(".data"):
             filenames.append(root + "/" + filename)
 
 # crc32 = rust_utils.crc32_hash([filenames[0]])
 # adler32 = rust_utils.adler32_hash([filenames[0]])
 # fletcher16 = rust_utils.fletcher16_hash([filenames[0]])
 
-print("end")
-duplication = []
-# roughly 70gb
-for _ in range(0, 20):
-    duplication += filenames
 
-#duplication = ["/home/balazs/Downloads/test_data/archive/HINDALCO_60minute_data.csv"]
+
+#filenames = ["/home/balazs/Downloads/test_data/archive/HINDALCO_60minute_data.csv"]
+
+    def get_python_file_hash(paths):
+        results = []
+        for path in paths:
+            with open(path, 'rb') as fh:
+                hash = 0
+                while True:
+                    s = fh.read(1024 * 128)
+                    if not s:
+                        break
+                    hash = zlib.crc32(s, hash)
+                results.append(hash)
+        return results
+
+
 def call_python_hash():
-    result = FileHandler.get_python_file_hash(duplication)
+    result = get_python_file_hash(filenames)
     print(len(result))
     print(result[-1])
 
 def call_crc32_single_no_batch():
     results = []
-    for dup in duplication:
-        result = rust_utils.crc32_hash([dup])[0]
+    for dup in filenames:
+        result = rust_utils.crc32_hash([filenames])[0]
         results.append(result)
     print(len(results))
     print(results[-1])
 def call_crc32_single():
-    result = rust_utils.crc32_hash(duplication)
+    result = rust_utils.crc32_hash(filenames)
     print(len(result))
     print(result[-1])
 
 
 def call_crc32_multi_2():
-    result = rust_utils.multithreaded_crc32_hash(duplication, 2)
+    result = rust_utils.multithreaded_crc32_hash(filenames, 2)
     print(len(result))
     print(result[-1])
 
 
 def call_crc32_multi_4():
-    result = rust_utils.multithreaded_crc32_hash(duplication, 4)
+    result = rust_utils.multithreaded_crc32_hash(filenames, 4)
     print(len(result))
     print(result[-1])
 
 
 def call_crc32_multi_8():
-    result = rust_utils.multithreaded_crc32_hash(duplication, 8)
+    result = rust_utils.multithreaded_crc32_hash(filenames, 8)
     print(len(result))
     print(result[-1])
 
 
 def call_crc32_multi_16():
-    result = rust_utils.multithreaded_crc32_hash(duplication, 16)
+    result = rust_utils.multithreaded_crc32_hash(filenames, 16)
     print(len(result))
     print(result[-1])
 
 
 def call_crc32_multi_2_single_io():
-    result = rust_utils.multithreaded_crc32_hash_with_single_io_thread(duplication, 2)
+    result = rust_utils.multithreaded_crc32_hash_with_single_io_thread(filenames, 2)
     print(len(result))
     print(result[-1])
 
 
 def call_crc32_multi_4_single_io():
-    result = rust_utils.multithreaded_crc32_hash_with_single_io_thread(duplication, 4)
+    result = rust_utils.multithreaded_crc32_hash_with_single_io_thread(filenames, 4)
     print(len(result))
     print(result[-1])
 
 
 def call_crc32_multi_8_single_io():
-    result = rust_utils.multithreaded_crc32_hash_with_single_io_thread(duplication, 8)
+    result = rust_utils.multithreaded_crc32_hash_with_single_io_thread(filenames, 8)
     print(len(result))
     print(result[-1])
 
 
 def call_crc32_multi_16_single_io():
-    result = rust_utils.multithreaded_crc32_hash_with_single_io_thread(duplication, 16)
+    result = rust_utils.multithreaded_crc32_hash_with_single_io_thread(filenames, 16)
     print(len(result))
     print(result[-1])
 
 
 def call_crc32_multi_2_uring_io():
-    result = rust_utils.multithreaded_crc32_hash_with_uring(duplication, 2)
+    result = rust_utils.multithreaded_crc32_hash_with_uring(filenames, 2)
     print(len(result))
     print(result[-1])
 
 
 def call_crc32_multi_4_uring_io():
-    result = rust_utils.multithreaded_crc32_hash_with_uring(duplication, 4)
+    result = rust_utils.multithreaded_crc32_hash_with_uring(filenames, 4)
     print(len(result))
     print(result[-1])
 
 
 def call_crc32_multi_8_uring_io():
-    result = rust_utils.multithreaded_crc32_hash_with_uring(duplication, 8)
+    result = rust_utils.multithreaded_crc32_hash_with_uring(filenames, 8)
     print(len(result))
     print(result[-1])
 
 
 def call_crc32_multi_16_uring_io():
-    result = rust_utils.multithreaded_crc32_hash_with_uring(duplication, 16)
+    result = rust_utils.multithreaded_crc32_hash_with_uring(filenames, 16)
     print(len(result))
     print(result[-1])
 
 
 def call_python_crc32():
-    result = FileHandler.get_python_file_hash(duplication)
+    result = FileHandler.get_python_file_hash(filenames)
     print(len(result))
     print(result[-1])
 
 
 def call_adler32_single():
-    result = rust_utils.adler32_hash(duplication)
+    result = rust_utils.adler32_hash(filenames)
     print(len(result))
     print(result[-1])
 
 
 def call_adler32_multi():
-    result = rust_utils.multithreaded_adler32_hash(duplication, 4)
+    result = rust_utils.multithreaded_adler32_hash(filenames, 4)
     print(len(result))
     print(result[-1])
 
 
 def call_fletcher16_single():
-    result = rust_utils.fletcher16_hash(duplication)
+    result = rust_utils.fletcher16_hash(filenames)
     print(len(result))
     print(result[-1])
 
