@@ -6,6 +6,8 @@ from functools import partial
 
 import pandas
 import logging
+import rust_utils
+import zlib
 from pandas.util import hash_pandas_object
 
 from discovery.utils.custom_exceptions import UnsupportedFileExtension, FileNotFoundError
@@ -100,6 +102,23 @@ class FileHandler:
     @staticmethod
     def get_dataframe_hash(dataframe: pandas.DataFrame):
         return hash_pandas_object(dataframe).sum()
+
+    @staticmethod
+    def get_python_file_hash(paths):
+        results = []
+        for path in paths:
+            with open(path, 'rb') as fh:
+                hash = 0
+                while True:
+                    s = fh.read(1024 * 128)
+                    if not s:
+                        break
+                    hash = zlib.crc32(s, hash)
+                results.append(hash)
+        return results
+    @staticmethod
+    def get_rust_file_hash(paths):
+        return rust_utils.hash_file(paths)
 
 
 def construct_file_descriptor(file_path: str, extension: FileExtension, dataframe_call: partial):
