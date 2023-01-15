@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
 from discovery.data_matching.data_match_interface import DataMatcher
 from discovery.data_matching.dataframe_matcher import DataFrameMatcher
-from discovery.utils.metadata.metadata_json_handler import write_metadata_to_json
+from discovery.utils.metadata.metadata_json_writer import write_metadata_to_json
 from discovery.utils.decorators.type_enforcer import type_enforcer
 from discovery.utils.file_handler import FileHandler
 from discovery.utils.decorators.persist_execution import persistence

@@ -25,18 +25,13 @@ class Relationship:
 class ColMetadata(ABC):
     name: str
     col_type: str
-    columns: any  # [ColMetadata]
     relationships: [Relationship]
 
-    def __init__(self, name: str, col_type: str, continuity: float, columns=None):
+    def __init__(self, name: str, col_type: str, continuity: float):
         self.name = name
         self.col_type = col_type
         self.continuity = continuity
-        self.columns = columns
         self.relationships = []
-
-    def set_columns(self, columns):
-        self.columns = columns
 
     def add_relationship(self, certainty, target_file_hash, target_column_name):
         self.relationships.append(Relationship(certainty, target_file_hash, target_column_name))
@@ -49,8 +44,8 @@ class NumericColMetadata(ColMetadata):
 
     def __init__(self, name: str, col_type: str, is_numeric_percentage: float, continuity: float,
                  mean: Union[int, float, None], min_val, max_val,
-                 stationarity: bool, columns=None):
-        ColMetadata.__init__(self, name, col_type, continuity, columns)
+                 stationarity: bool):
+        ColMetadata.__init__(self, name, col_type, continuity)
         self.is_numeric_percentage = is_numeric_percentage
         self.mean = mean
         self.minimum = min_val
@@ -59,7 +54,7 @@ class NumericColMetadata(ColMetadata):
 
 
 class CategoricalColMetadata(ColMetadata):
-    def __init__(self, name: str, col_type: str, continuity: float, columns=None):
+    def __init__(self, name: str, col_type: str, continuity: float):
         ColMetadata.__init__(self, name, col_type, continuity)
 
 
@@ -72,10 +67,10 @@ class Metadata:
             size: (int, FileSizeUnit),
             file_hash: int,
             no_of_rows: int,
-            columns: [] = None,
+            columns: {} = None,
             tags: [] = None
     ):
-        columns = columns or []
+        columns = columns or {}
         tags = tags or []
         self.file_path = file_path
         self.extension = extension
@@ -85,6 +80,11 @@ class Metadata:
         self.columns = columns
         self.tags = tags
         self.datagen = datagen
+
+    def populate_from_dict(self, json_dict):
+        if json_dict is not None:
+            for key, value in json_dict.items():
+                setattr(self, key, value)
 
 
 def construct_metadata_from_file_descriptor(file_descriptor):
