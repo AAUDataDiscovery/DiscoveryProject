@@ -2,8 +2,8 @@ import yaml
 import logging.config
 
 from data_matching.dataframe_matcher import DataFrameMatcher
-from utils.file_handler import FileHandler
-from discovery.utils.metadata.metadata import construct_metadata_from_file_descriptor
+from utils.data_system_handlers.local_file_handler import FileHandler
+from metadata import construct_metadata_from_file_descriptor
 from discovery.utils.visualizer import Visualizer
 
 if __name__ == "__main__":

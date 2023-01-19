@@ -34,4 +34,4 @@ jobs:
           deactivate
       - name: Test with pytest
         run: |
-          pdm run -v pytest test
+          PYTHONPATH=discovery pdm run -v pytest test

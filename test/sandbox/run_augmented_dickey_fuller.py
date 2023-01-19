@@ -4,7 +4,7 @@ from statsmodels.tsa.stattools import adfuller
 import plotly.express as px
 import plotly
 
-from utils.file_handler import FileHandler
+from utils.data_system_handlers.local_file_handler import FileHandler
 from utils.datagen import FakeDataGen
 
 

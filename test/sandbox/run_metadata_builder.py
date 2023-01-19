@@ -1,9 +1,9 @@
 import yaml
 import logging.config
 
-from utils.file_handler import FileHandler
-from discovery.utils.metadata.metadata import construct_metadata_from_file_descriptor
-from discovery.utils.metadata.metadata_json_writer import write_metadata_to_json
+from utils.data_system_handlers.local_file_handler import FileHandler
+from metadata import construct_metadata_from_file_descriptor
+from metadata import write_metadata_to_json
 from discovery.utils.visualizer import Visualizer
 
 if __name__ == "__main__":

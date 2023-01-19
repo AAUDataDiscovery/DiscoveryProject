@@ -18,8 +18,8 @@ dependencies = [
     "statsmodels>=0.13.2",
     "dtaidistance>=2.3.10",
     "setuptools>=65.5.0",
-    "maturin>=0.13.7",
     "kaggle>=1.5.12",
+    "jsonschema>=4.17.3",
 ]
 requires-python = ">=3.10"
 license = {text = "MIT"}

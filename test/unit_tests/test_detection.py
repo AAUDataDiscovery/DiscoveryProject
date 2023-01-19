@@ -22,5 +22,5 @@ def discovery_instance():
 
 
 def test_simple_detection(discovery_instance, mock_data_folder):
-    discovery_instance.load_files(str(mock_data_folder))
+    discovery_instance.scan_local_filesystem(str(mock_data_folder))
     assert all(x in list(discovery_instance.get_loaded_files()) for x in os.listdir(mock_data_folder))

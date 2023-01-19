@@ -3,9 +3,7 @@ import logging.config
 import os
 
 from discovery.data_matching.matching_methods import MatchColumnNamesLevenshtein
-from discovery.utils.metadata.metadata_json_writer import write_metadata_to_json
-from discovery.utils.visualizer import Visualizer
-from discovery.utils.metadata.metadata import add_tags_to_metadata
+from metadata import add_tags_to_metadata
 from discovery import DiscoveryClient
 from test.sandbox.setup import DATASETS
 from test.sandbox.setup import download_datasets
