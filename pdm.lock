@@ -45,7 +45,7 @@ dependencies = [
 
 [[package]]
 name = "faker"
-version = "15.0.0"
+version = "16.6.0"
 requires_python = ">=3.7"
 summary = "Faker is a Python package that generates fake data for you."
 dependencies = [
@@ -361,7 +361,7 @@ summary = "HTTP library with thread-safe connection pooling, file post, and more
 
 [metadata]
 lock_version = "4.1"
-content_hash = "sha256:0fd156803c31a41eebed17acd77531a0fad9698c8d99a157b8fb03bdc4cb1c30"
+content_hash = "sha256:2fb16ef4732331acd2cbbd884416bca504c587c9b8881726113a2de5feb51235"
 
 [metadata.files]
 "attrs 22.1.0" = [
@@ -398,9 +398,9 @@ content_hash = "sha256:0fd156803c31a41eebed17acd77531a0fad9698c8d99a157b8fb03bdc
     {url = "https://files.pythonhosted.org/packages/e7/b1/6b8c3e096f93f37b688e1b64586732798ea89a391ab044fd9b7c44dabd9c/dtaidistance-2.3.10-cp38-cp38-macosx_10_15_x86_64.whl", hash = "sha256:e1f96f0f4e6e4759447aa64c509a48bb38b5189631a559144869fd0f0262a906"},
     {url = "https://files.pythonhosted.org/packages/ef/49/341d1a7980c52dbb233f7bd8a424134e1043f11918e780dd676402e154cb/dtaidistance-2.3.10-cp39-cp39-macosx_10_15_x86_64.whl", hash = "sha256:58b8dbde8acd9b983913df1ff0caac4cd4a8d5fa9d97aa350e97186729db0c0f"},
 ]
-"faker 15.0.0" = [
-    {url = "https://files.pythonhosted.org/packages/71/0b/0958bf1339211af6149fc3f194c1454666cee62db451068ddcb003fd8b73/Faker-15.0.0.tar.gz", hash = "sha256:245fc7d23470dc57164bd9a59b7b1126e16289ffcf813d88a6c8e9b8a37ea3fb"},
-    {url = "https://files.pythonhosted.org/packages/94/c5/3d96cc91e99e4aefbe4c1de3d752abbc4eef380eec4fec3e5eb76623c516/Faker-15.0.0-py3-none-any.whl", hash = "sha256:84c83f0ac1a2c8ecabd784c501aa0ef1d082d4aee52c3d797d586081c166434c"},
+"faker 16.6.0" = [
+    {url = "https://files.pythonhosted.org/packages/32/08/8969f10c0adb9007e3f0e0f36d6a4922093cf8ec8f6b68967446bfbf137e/Faker-16.6.0.tar.gz", hash = "sha256:dc8b2a8bf0d852d26eacf7763afd5e7d6e9e50d80ec648b51b8ecd3c505435fd"},
+    {url = "https://files.pythonhosted.org/packages/f8/c7/32b14d9494b70355ec2642e9393512c20b0eae6a38a49bd2c8ae384d0bb8/Faker-16.6.0-py3-none-any.whl", hash = "sha256:0a74514d654db0a3d37b9ca681f2d9182d2ec556f78b4f1a842a2ccc944660cd"},
 ]
 "flake8 5.0.4" = [
     {url = "https://files.pythonhosted.org/packages/ad/00/9808c62b2d529cefc69ce4e4a1ea42c0f855effa55817b7327ec5b75e60a/flake8-5.0.4.tar.gz", hash = "sha256:6fbe320aad8d6b95cec8b8e47bc933004678dc63095be98528b7bdd2a9f510db"},

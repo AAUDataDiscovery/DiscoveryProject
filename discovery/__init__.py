@@ -1,1 +1,1 @@
-from discovery_client import DiscoveryClient
+from discovery.discovery_client import DiscoveryClient

@@ -4,9 +4,9 @@ from typing import Iterable
 import pandas as pd
 from pandas.api.types import is_numeric_dtype
 
-from metadata.catalogue_metadata import CatalogueMetadata, ColMetadata, NumericColMetadata, \
+from discovery.metadata.catalogue_metadata import CatalogueMetadata, ColMetadata, NumericColMetadata, \
     CategoricalColMetadata
-from utils.data_handling.catalogue_data import CatalogueData
+from discovery.utils.data_handling.catalogue_data import CatalogueData
 
 
 class CatalogueItem:

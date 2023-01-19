@@ -4,8 +4,8 @@ from typing import Iterable
 import pandas as pd
 import pandas.errors
 
-from utils.data_handling.catalogue_data import CatalogueData
-from utils.data_handling.data_size import *
+from discovery.utils.data_handling.catalogue_data import CatalogueData
+from discovery.utils.data_handling.data_size import *
 
 
 class LocalCSVHandler(CatalogueData):
