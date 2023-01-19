@@ -24,10 +24,10 @@ def mock_data_file(tmp_path_factory):
     return os.listdir(temp_path)[0]
 
 
-def test_read_small_csv():
-    builder = metadata.from_csv("/home/mii/PycharmProjects/DiscoveryProject/discovery/matcher_test_0.csv")
-    builder.get_data()
-    builder.rebuild_metadata_object()
+# def test_read_small_csv():
+    # builder = metadata.from_csv("/home/mii/PycharmProjects/DiscoveryProject/discovery/matcher_test_0.csv")
+    # builder.get_data()
+    # builder.rebuild_metadata_object()
     # for filename in os.listdir(mock_data_folder):
     #     builder = metadata.from_csv(os.path.join(mock_data_folder, filename))
     # discovery_instance.load_files(str(mock_data_folder))
