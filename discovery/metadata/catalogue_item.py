@@ -6,8 +6,7 @@ from pandas.api.types import is_numeric_dtype
 
 from metadata.catalogue_metadata import CatalogueMetadata, ColMetadata, NumericColMetadata, \
     CategoricalColMetadata
-from utils.data_readers import CatalogueData
-from .metadata_enums import FileSizeUnit
+from utils.data_handling.catalogue_data import CatalogueData
 
 
 class CatalogueItem:
@@ -59,6 +58,16 @@ class CatalogueItem:
             return next(data_generator)
         return data_generator
 
+    def get_checksum(self, update=True):
+        """Return a checksum for the given dataframe
+
+        Allows for abstracting checksum calculations into the reader itself
+        If update is set to True, the checksum needs to be rebuilt,
+        not rebuilding the checksum can be used for static data
+        """
+        return self._data.get_checksum(update=update)
+
+
     def get_metadata(self) -> CatalogueMetadata:
         """Return the metadata for this catalogue item
 
@@ -73,12 +82,7 @@ class CatalogueItem:
         """
         return {
             f"{str(self.get_id())}": {
-                "data_checksum": self._metadata.data_checksum,
-                "no_of_rows": self._metadata.no_of_rows,
-                "size": {
-                    "quantity": self._metadata.data_size[0],
-                    "unit": self._metadata.data_size[1].name
-                },
+                "data_handling": self._data.get_manifest(),
                 "tags": {
                     name: value
                     for name, value in self._metadata.tags.items()
@@ -109,9 +113,8 @@ class CatalogueItem:
             column_metadata[column] = resolve_metadata_column(column, dataframe[column])
 
         self._metadata = CatalogueMetadata(
-            data_checksum=self._data.get_checksum(dataframe),
-            data_size=(int(dataframe.memory_usage(index=True).sum()), FileSizeUnit.BYTE),
-            no_of_rows=dataframe.shape[0],
+            item_id=self.get_id(),
+            data_manifest=self._data.get_manifest(),
             columns=column_metadata,
             tags=self._metadata.tags
         )

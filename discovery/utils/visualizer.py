@@ -65,9 +65,10 @@ class Visualizer:
         # self.draw_relationships(metadata)
         self._finalize_result_graph(filename)
 
-    def _draw_metadata(self, metadata):
+    def _draw_metadata(self, metadata: [CatalogueMetadata]):
         for datum in metadata:
-            self.working_node = self._determine_working_node(datum.tags.get('file_path'))
+            file_path = datum.data_manifest.get('path', 'undefined')
+            self.working_node = self._determine_working_node(file_path)
             self._draw_metadatum(datum)
 
     # Don't use it, not implemented properly
@@ -87,20 +88,20 @@ class Visualizer:
     def _draw_metadatum(self, metadatum: CatalogueMetadata):
         columns = self._draw_table_columns(metadatum)
         filled_table = self._draw_filled_metadatum_table(metadatum, columns)
-        self.working_node.graph.node(str(metadatum.data_checksum), filled_table)
+        self.working_node.graph.node(str(metadatum.item_id), filled_table)
 
     # TODO: make it more generic
     def _draw_table_columns(self, metadatum):
         col_rows: str = ""
         for column in metadatum.columns.values():
-            col_rows += '<TR><TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> '\
+            col_rows += '<TR><TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> <TD>{}</TD> ' \
                 .format(column.name, column.col_type,
                         str(round(column.continuity * 100, 2)) + '%',
                         getattr(column, "mean", "NA"),
                         getattr(column, "minimum", "NA"),
                         getattr(column, "maximum", "NA")
                         )
-                        # 'NA' if column.stationarity is None else ('Yes' if column.stationarity == 1 else 'No'))
+            # 'NA' if column.stationarity is None else ('Yes' if column.stationarity == 1 else 'No'))
 
             for relationship in column.relationships:
                 col_rows += '<TD>' + relationship.target_column_name + ' ' + \
@@ -110,13 +111,15 @@ class Visualizer:
 
     # TODO: find a more generic approach
     def _draw_filled_metadatum_table(self, metadatum, col_strings: str):
+        file_path = metadatum.data_manifest.get('path', 'undefined')
+        data_size = metadatum.data_manifest['data_size']
         filled_table = f'''<
             <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
               <TR>
-                <TD COLSPAN="8" BGCOLOR="darkgrey">{metadatum.tags.get("file_path", None)}</TD>
+                <TD COLSPAN="8" BGCOLOR="darkgrey">{file_path}</TD>
               </TR>
               <TR>
-                <TD COLSPAN="8" BGCOLOR="darkgrey">{metadatum.no_of_rows} rows</TD>
+                <TD COLSPAN="8" BGCOLOR="darkgrey">{data_size.get('rows', 0)} rows</TD>
               </TR>
               <TR>
                 <TD COLSPAN="8" BGCOLOR="darkgrey">Tags: {', '.join(metadatum.tags)}</TD>
@@ -144,7 +147,7 @@ class Visualizer:
         return filled_table
 
     def _determine_working_node(self, filesystem_full_path: str):
-        determined_node = None
+        # determined_node = None
 
         already_visited_node = self._get_node_if_path_was_already_observed(filesystem_full_path)
         if already_visited_node is not None:

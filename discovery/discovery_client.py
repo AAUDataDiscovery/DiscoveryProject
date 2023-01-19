@@ -77,7 +77,7 @@ class DiscoveryClient:
             # keep just the average for now
             result_average = result[1]
             col1.add_relationship(
-                result_average, target_metadata.data_checksum, col2.name
+                result_average, target_item.get_checksum(), col2.name
             )
 
     def add_catalogue_item(self, catalogue_item: metadata.CatalogueItem):
@@ -119,6 +119,20 @@ class DiscoveryClient:
         new_item.rebuild_metadata_object()
         self.add_catalogue_item(new_item)
 
+    def load_metadata(self, path):
+        """Uses the from_metdata method to load in previously created metadata items
+        as catalogue items
+
+        Args:
+            path: The path to the metadata file
+
+        Returns: None
+        """
+        new_items = metadata.from_metadata_json(path)
+        for new_item in new_items:
+            new_item.rebuild_metadata_object()
+            self.add_catalogue_item(new_item)
+
     def scan_local_filesystem(self, path):
         """Read in data from a local filesystem, given a path
 
@@ -144,10 +158,11 @@ if __name__ == "__main__":
     from utils.datagen import FakeDataGen
 
     fake_data = FakeDataGen()
-    fake_files = fake_data.build_df_to_file(1000, "matcher_test", index_type="categoric", continuous_data=5,
-                                            file_spread=2)
-    discovery_instance.load_file(fake_files[0])
-    discovery_instance.load_file(fake_files[1])
+    # fake_files = fake_data.build_df_to_file(1000, "matcher_test", index_type="categoric", continuous_data=5,
+    #                                         file_spread=2)
+    # discovery_instance.load_file(fake_files[0])
+    # discovery_instance.load_file(fake_files[1])
+    discovery_instance.load_metadata("newtest.json")
 
     discovery_instance.construct_relationships(
         methods=[
@@ -158,4 +173,4 @@ if __name__ == "__main__":
 
     discovery_instance.write_catalogue("newtest.json")
 
-    # discovery_instance.create_visual("test_visual")
+    discovery_instance.create_visual("test_visual")

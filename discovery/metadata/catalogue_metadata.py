@@ -1,7 +1,6 @@
+import uuid
 from typing import Union
 from abc import ABC
-
-from .metadata_enums import FileSizeUnit
 
 
 class Relationship:
@@ -74,22 +73,19 @@ class CategoricalColMetadata(ColMetadata):
 
 
 class CatalogueMetadata:
-    data_checksum: int
-    data_size: tuple[int, FileSizeUnit]
-    no_of_rows: int
+    item_id: uuid.UUID
+    data_manifest: dict
     columns: dict[str:ColMetadata] = []
     tags: dict = {}
 
     def __init__(
             self,
-            data_checksum: int | None = None,
-            data_size: tuple[int, FileSizeUnit] | None = None,
-            no_of_rows: int | None = None,
+            data_manifest: dict,
+            item_id: uuid.UUID = None,
             columns: dict[str, ColMetadata] | None = None,
             tags: dict | None = None
     ):
-        self.data_checksum = data_checksum
-        self.data_size = data_size
-        self.no_of_rows = no_of_rows
+        self.item_id = item_id
+        self.data_manifest = data_manifest
         self.columns = columns or {}
         self.tags = tags or {}
