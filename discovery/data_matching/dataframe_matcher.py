@@ -12,7 +12,7 @@ import pandas as pd
 import numpy
 
 from discovery.data_matching.data_match_interface import DataMatcher
-from metadata import CatalogueMetadata, NumericColMetadata, ColMetadata
+from discovery.metadata import CatalogueMetadata, NumericColMetadata, ColMetadata
 
 logger = logging.getLogger(__name__)
 

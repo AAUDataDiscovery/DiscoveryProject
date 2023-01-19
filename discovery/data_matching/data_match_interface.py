@@ -8,7 +8,7 @@ TODO:
 """
 import pandas as pd
 from discovery.metadata import ColMetadata, CatalogueMetadata
-import metadata
+from discovery import metadata
 
 
 class DataMatcher:

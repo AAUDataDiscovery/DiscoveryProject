@@ -1,7 +1,7 @@
 from typing import Optional
 import graphviz
 
-from metadata import CatalogueMetadata
+from discovery.metadata import CatalogueMetadata
 
 
 class SubGraphNode:

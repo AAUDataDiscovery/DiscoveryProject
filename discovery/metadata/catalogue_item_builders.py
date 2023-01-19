@@ -12,7 +12,7 @@ from discovery.metadata.catalogue_item import CatalogueItem
 from discovery.metadata.catalogue_metadata import CatalogueMetadata
 from discovery.utils.data_handling.local_csv_handler import LocalCSVHandler
 from discovery.utils.data_handling import data_size
-from utils.data_handling.catalogue_data import *
+from discovery.utils.data_handling.catalogue_data import *
 
 logger = logging.getLogger(__name__)
 
